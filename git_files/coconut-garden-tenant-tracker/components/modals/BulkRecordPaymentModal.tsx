@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
-import { Tenant, Payment, PaymentStatus } from '../../types'; 
+import { Tenant, Payment, PaymentStatus } from '../../types'; // Corrected path
 import { ExclamationTriangleIcon, CurrencyDollarIcon, CalendarDaysIcon } from '../icons';
 import { CURRENCY_SYMBOL } from '../../constants';
 
@@ -9,7 +9,7 @@ interface BulkRecordPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   tenants: Tenant[];
-  payments: Payment[]; 
+  payments: Payment[];
   onSubmit: (
     selectedTenantIds: string[],
     paymentDate: string,
@@ -37,7 +37,7 @@ const BulkRecordPaymentModal: React.FC<BulkRecordPaymentModalProps> = ({
   const [commonAmount, setCommonAmount] = useState<number | ''>('');
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
-  const getPaymentForTenantCurrentMonth = (tenantId: string, allPayments: Payment[]): Payment | undefined => { 
+  const getPaymentForTenantCurrentMonth = (tenantId: string, allPayments: Payment[]): Payment | undefined => {
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
@@ -51,9 +51,9 @@ const BulkRecordPaymentModal: React.FC<BulkRecordPaymentModalProps> = ({
       const unpaidTenants = tenants
         .filter(tenant => {
           const payment = getPaymentForTenantCurrentMonth(tenant.id, payments);
-          return !payment; 
+          return !payment;
         })
-        .map(t => ({ ...t, isSelected: true })); 
+        .map(t => ({ ...t, isSelected: true } as TenantForBulkPayment)); // Ensure type compatibility
 
       setSelectableTenants(unpaidTenants);
       setPaymentDate(new Date().toISOString().split('T')[0]);

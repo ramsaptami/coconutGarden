@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Tenant, Payment, PaymentStatus } from '../../types'; 
-import { RENT_DUE_DAY, CURRENCY_SYMBOL } from '../../constants';
+import { Tenant, Payment, PaymentStatus } from '../types'; // Corrected path
+import { RENT_DUE_DAY, CURRENCY_SYMBOL } from '../constants';
 import { UserCircleIcon, EnvelopeIcon, PhoneIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, EyeIcon } from './icons'; 
 
 interface TenantCardProps {

@@ -130,23 +130,24 @@ const TenantDetailsModal: React.FC<TenantDetailsModalProps> = ({
           )}
         </div>
          <div className="flex justify-between items-center pt-4 mt-4 border-t border-accent-300">
-            <button 
-              onClick={handleDeleteTrigger} 
-              className="px-4 py-2 text-sm font-medium text-white bg-error-500 hover:bg-error-600 rounded-md shadow-sm flex items-center space-x-2 disabled:opacity-50"
+            <button
+              onClick={handleDeleteTrigger}
+              className="px-4 py-2 text-sm font-medium text-white bg-error-500 hover:bg-error-600 rounded-md shadow-sm flex items-center space-x-1.5 transition-colors disabled:opacity-50"
               disabled={isSubmitting}
+              aria-label="Delete this tenant"
             >
-              <TrashIcon className="w-4 h-4"/>
-              <span>{isSubmitting ? 'Deleting...' : 'Delete Tenant'}</span>
+              <TrashIcon className="w-4 h-4 mr-1.5" />
+              <span>Delete Tenant</span>
             </button>
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="px-4 py-2 text-sm font-medium text-primary-800 bg-accent-200 hover:bg-accent-300 rounded-md shadow-sm  disabled:opacity-50"
-              disabled={isSubmitting}
+            <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-primary-800 bg-accent-200 hover:bg-accent-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                disabled={isSubmitting}
             >
-              Close
+                Close
             </button>
-          </div>
+        </div>
       </div>
     </Modal>
   );
