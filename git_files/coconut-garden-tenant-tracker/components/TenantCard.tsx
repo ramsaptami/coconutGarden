@@ -3,6 +3,7 @@ import React from 'react';
 import { Tenant, Payment, PaymentStatus } from '../types'; // Corrected path
 import { RENT_DUE_DAY, CURRENCY_SYMBOL } from '../constants';
 import { UserCircleIcon, EnvelopeIcon, PhoneIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, EyeIcon } from './icons'; 
+import { formatDate_dd_mm_yyyy } from '../services/geminiService';
 
 interface TenantCardProps {
   tenant: Tenant;
@@ -27,7 +28,7 @@ const TenantCard = ({ tenant, paymentForCurrentMonth, onTriggerRecordPayment, on
 
   if (paymentForCurrentMonth && paymentForCurrentMonth.paid_date) { 
     status = PaymentStatus.Paid;
-    statusText = `Paid on ${new Date(paymentForCurrentMonth.paid_date).toLocaleDateString()}`;
+    statusText = `Paid on ${formatDate_dd_mm_yyyy(paymentForCurrentMonth.paid_date)}`;
     statusColorClasses = "bg-success-100 text-success-800";
     IconComponent = CheckCircleIcon;
     topBannerBg = "bg-success-500";
@@ -76,7 +77,7 @@ const TenantCard = ({ tenant, paymentForCurrentMonth, onTriggerRecordPayment, on
         <h3 className="text-xl font-bold truncate" title={tenant.name}>{tenant.name}</h3>
         <span className={`text-sm font-semibold px-3 py-1 rounded-full flex items-center ${statusColorClasses} bg-opacity-20 backdrop-blur-sm`}>
            <IconComponent className="w-5 h-5 mr-1.5" />
-          {displayStatus === PaymentStatus.Paid ? `Paid: ${new Date(paymentForCurrentMonth!.paid_date!).toLocaleDateString()}` : displayStatus}
+          {displayStatus === PaymentStatus.Paid ? `Paid: ${formatDate_dd_mm_yyyy(paymentForCurrentMonth!.paid_date!)}` : displayStatus}
         </span>
       </div>
 

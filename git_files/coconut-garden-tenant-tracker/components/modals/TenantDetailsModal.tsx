@@ -4,6 +4,7 @@ import { Tenant, Payment, PaymentStatus } from '../../types';
 import Modal from './Modal';
 import { UserCircleIcon, EnvelopeIcon, PhoneIcon, BriefcaseIcon, CalendarDaysIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, TrashIcon, ShieldCheckIcon, ShieldExclamationIcon } from '../icons';
 import { CURRENCY_SYMBOL } from '../../constants';
+import { formatDate_dd_mm_yyyy } from '../../services/geminiService';
 
 interface TenantDetailsModalProps {
   isOpen: boolean;
@@ -76,7 +77,7 @@ const TenantDetailsModal: React.FC<TenantDetailsModalProps> = ({
             <p className="flex items-center"><EnvelopeIcon className="w-5 h-5 mr-2 text-primary-500" /> {tenant.email}</p>
             <p className="flex items-center"><PhoneIcon className="w-5 h-5 mr-2 text-primary-500" /> {tenant.phone || 'N/A'}</p>
             <p className="flex items-center col-span-1 md:col-span-2"><BriefcaseIcon className="w-5 h-5 mr-2 text-primary-500" /> <span className="font-medium">Work:</span>&nbsp;{tenant.work_info || 'N/A'}</p> 
-            <p className="flex items-center"><CalendarDaysIcon className="w-5 h-5 mr-2 text-primary-500" /> <span className="font-medium">Joined:</span>&nbsp;{new Date(tenant.join_date).toLocaleDateString()}</p> 
+            <p className="flex items-center"><CalendarDaysIcon className="w-5 h-5 mr-2 text-primary-500" /> <span className="font-medium">Joined:</span>&nbsp;{formatDate_dd_mm_yyyy(tenant.join_date)}</p> 
             <p className="flex items-center"><span className="text-lg font-semibold text-primary-500 mr-2">{CURRENCY_SYMBOL}{tenant.rent_amount.toFixed(2)}</span> per month</p> 
             <p className="flex items-center">
               {tenant.id_proof ? <ShieldCheckIcon className="w-5 h-5 mr-2 text-success-500" /> : <ShieldExclamationIcon className="w-5 h-5 mr-2 text-error-500" />} 
@@ -110,7 +111,7 @@ const TenantDetailsModal: React.FC<TenantDetailsModalProps> = ({
                         {status === PaymentStatus.Unpaid && <span className="flex items-center text-warning-700"><XCircleIcon className="w-5 h-5 mr-1" />Unpaid</span>}
                         {status === PaymentStatus.Overdue && <span className="flex items-center text-error-700"><ExclamationTriangleIcon className="w-5 h-5 mr-1" />Overdue</span>}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-primary-600">{paymentRecord?.paid_date ? new Date(paymentRecord.paid_date).toLocaleDateString() : 'N/A'}</td> 
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-primary-600">{formatDate_dd_mm_yyyy(paymentRecord?.paid_date)}</td> 
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
                         {(status === PaymentStatus.Unpaid || status === PaymentStatus.Overdue) && (
                           <button 
