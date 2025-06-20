@@ -14,7 +14,7 @@ if (!API_KEY) {
   );
 }
 
-export const formatDate_dd_mm_yyyy = (dateInput: Date | string | null | undefined): string => {
+export const formatDate_dd_mmm_yyyy = (dateInput: Date | string | null | undefined): string => {
   if (!dateInput) return 'N/A';
   const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
   
@@ -23,9 +23,9 @@ export const formatDate_dd_mm_yyyy = (dateInput: Date | string | null | undefine
   }
 
   const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-indexed
+  const month = date.toLocaleString('default', { month: 'short' }); // e.g., "Jan", "Feb"
   const year = date.getFullYear();
-  return `${day}.${month}.${year}`;
+  return `${day} ${month} ${year}`;
 };
 
 export const generateReminderMessage = async (
@@ -33,7 +33,7 @@ export const generateReminderMessage = async (
   rentAmount: number,
   dueDate: Date // Changed from dueDateString: string
 ): Promise<string> => {
-  const formattedDueDate = formatDate_dd_mm_yyyy(dueDate);
+  const formattedDueDate = formatDate_dd_mmm_yyyy(dueDate);
   // Always return the simple template
   const simpleTemplate = `Dear ${tenantName},\n\nThis is a friendly reminder that your rent payment of ${CURRENCY_SYMBOL}${rentAmount.toFixed(2)} is due on ${formattedDueDate}.\n\nPlease make your payment at your earliest convenience.\n\nThank you,\nLandlord`;
   

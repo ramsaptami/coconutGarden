@@ -4,7 +4,7 @@ import { Tenant, Payment, PaymentStatus } from '../../types';
 import Modal from './Modal';
 import { UserCircleIcon, EnvelopeIcon, PhoneIcon, BriefcaseIcon, CalendarDaysIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, TrashIcon, ShieldCheckIcon, ShieldExclamationIcon } from '../icons';
 import { CURRENCY_SYMBOL } from '../../constants';
-import { formatDate_dd_mm_yyyy } from '../../services/geminiService';
+import { formatDate_dd_mmm_yyyy } from '../../services/geminiService';
 
 interface TenantDetailsModalProps {
   isOpen: boolean;
@@ -77,7 +77,7 @@ const TenantDetailsModal: React.FC<TenantDetailsModalProps> = ({
             <p className="flex items-center"><EnvelopeIcon className="w-5 h-5 mr-2 text-primary-500" /> {tenant.email}</p>
             <p className="flex items-center"><PhoneIcon className="w-5 h-5 mr-2 text-primary-500" /> {tenant.phone || 'N/A'}</p>
             <p className="flex items-center col-span-1 md:col-span-2"><BriefcaseIcon className="w-5 h-5 mr-2 text-primary-500" /> <span className="font-medium">Work:</span>&nbsp;{tenant.work_info || 'N/A'}</p> 
-            <p className="flex items-center"><CalendarDaysIcon className="w-5 h-5 mr-2 text-primary-500" /> <span className="font-medium">Joined:</span>&nbsp;{formatDate_dd_mm_yyyy(tenant.join_date)}</p> 
+            <p className="flex items-center"><CalendarDaysIcon className="w-5 h-5 mr-2 text-primary-500" /> <span className="font-medium">Joined:</span>&nbsp;{formatDate_dd_mmm_yyyy(tenant.join_date)}</p> 
             <p className="flex items-center"><span className="text-lg font-semibold text-primary-500 mr-2">{CURRENCY_SYMBOL}{tenant.rent_amount.toFixed(2)}</span> per month</p> 
             <p className="flex items-center">
               {tenant.id_proof ? <ShieldCheckIcon className="w-5 h-5 mr-2 text-success-500" /> : <ShieldExclamationIcon className="w-5 h-5 mr-2 text-error-500" />} 
@@ -93,61 +93,79 @@ const TenantDetailsModal: React.FC<TenantDetailsModalProps> = ({
           ) : (
             <div className="max-h-60 overflow-y-auto border border-accent-300 rounded-md">
               <table className="min-w-full divide-y divide-accent-300">
-                <thead className="bg-accent-300 sticky top-0">
+                <thead className="bg-accent-300 sticky top-0 z-10">
                   <tr>
                     <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">Month/Year</th>
                     <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">Status</th>
                     <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">Paid On</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">Amount</th>
                     <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
-                <tbody className="bg-accent-100 divide-y divide-accent-200">
-                  {paymentHistory.map(({ year, month, status, paymentRecord }) => (
-                    <tr key={`${year}-${month}`} 
-                        className={status === PaymentStatus.Paid ? 'bg-success-50' : status === PaymentStatus.Overdue ? 'bg-error-50' : 'bg-warning-50'}>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-primary-700">{new Date(year, month - 1).toLocaleString('default', { month: 'long' })} {year}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        {status === PaymentStatus.Paid && <span className="flex items-center text-success-700"><CheckCircleIcon className="w-5 h-5 mr-1" />Paid</span>}
-                        {status === PaymentStatus.Unpaid && <span className="flex items-center text-warning-700"><XCircleIcon className="w-5 h-5 mr-1" />Unpaid</span>}
-                        {status === PaymentStatus.Overdue && <span className="flex items-center text-error-700"><ExclamationTriangleIcon className="w-5 h-5 mr-1" />Overdue</span>}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-primary-600">{formatDate_dd_mm_yyyy(paymentRecord?.paid_date)}</td> 
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        {(status === PaymentStatus.Unpaid || status === PaymentStatus.Overdue) && (
-                          <button 
-                            onClick={() => onTriggerRecordPayment(month, year, tenant.rent_amount)} 
-                            className="text-primary-700 hover:text-primary-900 font-medium text-xs px-2 py-1 rounded bg-primary-100 hover:bg-primary-200 transition disabled:opacity-50"
-                            disabled={isSubmitting}
-                          >
-                            {isSubmitting ? 'Processing...' : 'Mark Paid'}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                <tbody className="bg-white divide-y divide-accent-200">
+                  {paymentHistory.map(item => {
+                    const monthName = new Date(item.year, item.month - 1).toLocaleString('default', { month: 'short' });
+                    let statusColor = '';
+                    let StatusIcon = XCircleIcon; // Default
+                    if (item.status === PaymentStatus.Paid) {
+                      statusColor = 'text-success-500';
+                      StatusIcon = CheckCircleIcon;
+                    } else if (item.status === PaymentStatus.Overdue) {
+                      statusColor = 'text-error-500';
+                      StatusIcon = ExclamationTriangleIcon;
+                    } else { // Unpaid
+                      statusColor = 'text-warning-500';
+                    }
+
+                    return (
+                      <tr key={`${item.year}-${item.month}`} className="hover:bg-accent-50">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-primary-800">{monthName} {item.year}</td>
+                        <td className={`px-4 py-3 whitespace-nowrap text-sm font-medium ${statusColor} flex items-center`}>
+                          <StatusIcon className={`w-5 h-5 mr-1.5`} />
+                          {item.status}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-accent-700">
+                          {item.paymentRecord?.paid_date ? formatDate_dd_mmm_yyyy(item.paymentRecord.paid_date) : 'N/A'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-accent-700">
+                          {item.paymentRecord?.amount_paid ? `${CURRENCY_SYMBOL}${item.paymentRecord.amount_paid.toFixed(2)}` : 'N/A'}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                          {item.status !== PaymentStatus.Paid && (
+                            <button 
+                              onClick={() => onTriggerRecordPayment(item.month, item.year, tenant.rent_amount)}
+                              disabled={isSubmitting}
+                              className="text-primary-500 hover:text-primary-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Record Payment
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
         </div>
-         <div className="flex justify-between items-center pt-4 mt-4 border-t border-accent-300">
-            <button
-              onClick={handleDeleteTrigger}
-              className="px-4 py-2 text-sm font-medium text-white bg-error-500 hover:bg-error-600 rounded-md shadow-sm flex items-center space-x-1.5 transition-colors disabled:opacity-50"
-              disabled={isSubmitting}
-              aria-label="Delete this tenant"
-            >
-              <TrashIcon className="w-4 h-4 mr-1.5" />
-              <span>Delete Tenant</span>
-            </button>
-            <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-primary-800 bg-accent-200 hover:bg-accent-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                disabled={isSubmitting}
-            >
-                Close
-            </button>
+        <div className="flex justify-end space-x-3 pt-4 border-t border-accent-300">
+          <button
+            onClick={onClose}
+            type="button"
+            className="px-4 py-2 text-sm font-medium text-primary-800 bg-accent-200 hover:bg-accent-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            Close
+          </button>
+          <button
+            onClick={handleDeleteTrigger}
+            type="button"
+            disabled={isSubmitting}
+            className="px-4 py-2 text-sm font-medium text-white bg-error-500 hover:bg-error-600 rounded-md shadow-sm flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-error-500 disabled:opacity-50"
+          >
+            <TrashIcon className="w-4 h-4"/>
+            <span>Delete Tenant</span>
+          </button>
         </div>
       </div>
     </Modal>
