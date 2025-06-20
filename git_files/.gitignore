@@ -11,6 +11,10 @@ Thumbs.db
 *.user
 *.sln.docstates
 
+#specific files
+"Tenancy Rules_Coconut Garden.docx"
+"Tenancy Rules_Coconut Garden.pdf"
+
 # If you ever introduce a build step (e.g., with Vite, Create React App)
 # dist/
 # build/
