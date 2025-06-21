@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Supabase config
+config.ts
+
+#specific files
+"Tenancy Rules_Coconut Garden.docx"
+"Tenancy Rules_Coconut Garden.pdf"
+
+
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
