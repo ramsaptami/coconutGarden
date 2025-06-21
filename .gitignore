@@ -15,8 +15,8 @@ Thumbs.db
 config.ts
 
 #specific files
-"Tenancy Rules_Coconut Garden.docx"
-"Tenancy Rules_Coconut Garden.pdf"
+Tenancy Rules_Coconut Garden.docx
+Tenancy Rules_Coconut Garden.pdf
 
 # If you ever introduce a build step (e.g., with Vite, Create React App)
 # dist/
