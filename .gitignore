@@ -11,6 +11,9 @@ Thumbs.db
 *.user
 *.sln.docstates
 
+# Supabase config
+config.ts
+
 #specific files
 "Tenancy Rules_Coconut Garden.docx"
 "Tenancy Rules_Coconut Garden.pdf"
