@@ -1,32 +1,37 @@
-import { Tenant, Payment } from '../types'; 
-import { SUPABASE_PROJECT_URL, SUPABASE_ANON_KEY } from '../config'; // Import from config.ts
+
+import { Tenant, Payment } from '../types';
 
 // =================================================================================
-// Configuration is now in config.ts
-// REMEMBER TO ADD config.ts TO YOUR .gitignore FILE!
-// =================================================_================================
+// Configuration is now sourced from Environment Variables
+// Please set SUPABASE_PROJECT_URL and SUPABASE_ANON_KEY in your Vercel project settings.
+// Also ensure API_KEY (for Gemini) is set.
+// =================================================================================
 
-// Check if the configuration values are loaded correctly
+const SUPABASE_PROJECT_URL = process.env.SUPABASE_PROJECT_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+// Check if the configuration values are loaded correctly from environment variables
 if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) {
-  const errorMsg = "Supabase Project URL or Anon Key is missing. Please check your config.ts file.";
+  const errorMsg = "Supabase Project URL or Anon Key is not defined in environment variables. " +
+    "Please set SUPABASE_PROJECT_URL and SUPABASE_ANON_KEY in your hosting environment (e.g., Vercel project settings).";
   console.error(errorMsg);
-  // Optionally, you could throw an error here to stop the app from trying to make API calls
-  // throw new Error(errorMsg); 
-  // For now, we'll allow the app to load, but API calls will fail.
-  // UI should ideally handle this by showing a persistent error.
+  // The app will load, but API calls will fail. 
+  // The UI in App.tsx handles and displays errors if API calls fail due to this.
 }
 
 const API_BASE_URL = `${SUPABASE_PROJECT_URL}/rest/v1`;
 
 const commonHeaders = {
-  'apikey': SUPABASE_ANON_KEY!, // Use non-null assertion as we've "checked" above (or handle more gracefully)
-  'Authorization': `Bearer ${SUPABASE_ANON_KEY!}`, // Use non-null assertion
+  'apikey': SUPABASE_ANON_KEY!,
+  'Authorization': `Bearer ${SUPABASE_ANON_KEY!}`,
   'Content-Type': 'application/json',
 };
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) {
-    throw new Error("API configuration is missing. Cannot process the request.");
+    // This check is a bit redundant if the initial check leads to non-functional API_BASE_URL/commonHeaders
+    // but kept for safety in case of partial configuration.
+    throw new Error("API configuration environment variables are missing. Cannot process the request.");
   }
   if (!response.ok) {
     let errorMessage = `API Error: ${response.status} ${response.statusText}`;
@@ -39,15 +44,15 @@ async function handleResponse<T>(response: Response): Promise<T> {
     throw new Error(errorMessage);
   }
   if (response.status === 204) { // For DELETE with Prefer: return=minimal
-    return null as T; 
+    return null as T;
   }
   const data = await response.json();
-  return data as T; 
+  return data as T;
 }
 
 // Tenant API Functions
 export async function fetchTenants(): Promise<Tenant[]> {
-  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API not configured.");
+  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API environment variables not configured.");
   const response = await fetch(`${API_BASE_URL}/tenants?select=*&order=name.asc`, {
     headers: commonHeaders,
   });
@@ -55,14 +60,14 @@ export async function fetchTenants(): Promise<Tenant[]> {
 }
 
 export async function addTenant(tenantData: Omit<Tenant, 'id'>): Promise<Tenant> {
-  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API not configured.");
+  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API environment variables not configured.");
   const response = await fetch(`${API_BASE_URL}/tenants`, {
     method: 'POST',
     headers: {
       ...commonHeaders,
-      'Prefer': 'return=representation', 
+      'Prefer': 'return=representation',
     },
-    body: JSON.stringify(tenantData), 
+    body: JSON.stringify(tenantData),
   });
   const newTenants = await handleResponse<Tenant[]>(response);
   if (newTenants && newTenants.length > 0) {
@@ -72,18 +77,18 @@ export async function addTenant(tenantData: Omit<Tenant, 'id'>): Promise<Tenant>
 }
 
 export async function deleteTenant(tenantId: string): Promise<void> {
-  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API not configured.");
+  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API environment variables not configured.");
   const deleteUrl = `${API_BASE_URL}/tenants?id=eq.${tenantId}`;
-  
+
   const response = await fetch(deleteUrl, {
     method: 'DELETE',
     headers: {
-        ...commonHeaders,
-        'Prefer': 'return=minimal', 
+      ...commonHeaders,
+      'Prefer': 'return=minimal',
     },
   });
 
-   if (!response.ok && response.status !== 204) { 
+  if (!response.ok && response.status !== 204) {
     let errorMessage = `API Error: ${response.status} ${response.statusText}`;
     let errorDetails = null;
     try {
@@ -99,7 +104,7 @@ export async function deleteTenant(tenantId: string): Promise<void> {
 
 // Payment API Functions
 export async function fetchPayments(): Promise<Payment[]> {
-  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API not configured.");
+  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API environment variables not configured.");
   const response = await fetch(`${API_BASE_URL}/payments?select=*&order=created_at.desc`, {
     headers: commonHeaders,
   });
@@ -107,7 +112,7 @@ export async function fetchPayments(): Promise<Payment[]> {
 }
 
 export async function recordPayment(paymentData: Omit<Payment, 'id'>): Promise<Payment> {
-  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API not configured.");
+  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API environment variables not configured.");
   const response = await fetch(`${API_BASE_URL}/payments`, {
     method: 'POST',
     headers: {
