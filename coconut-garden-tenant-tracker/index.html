@@ -1,87 +1,87 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coconut Garden Tenant Tracker</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: { // App Main Color: #498459
-              "50": "#f3f9f5",
-              "100": "#e7f3ec",
-              "200": "#cfead9",
-              "300": "#b7e0c6",
-              "400": "#9fd7b3",
-              "500": "#498459", // Base
-              "600": "#427750",
-              "700": "#386444",
-              "800": "#2e5138",
-              "900": "#243e2c",
-              "950": "#1a2b20"
-            },
-            success: { // Success: #1F4937
-              "50": "#f0f5f3",
-              "100": "#e2ebe7",
-              "200": "#c4d7d0",
-              "300": "#a7c3b8",
-              "400": "#89afa1",
-              "500": "#1F4937", // Base
-              "600": "#1c4130",
-              "700": "#18392a",
-              "800": "#142f23",
-              "900": "#10251c",
-              "950": "#0c1b14"
-            },
-            error: { // Error: #A03928
-              "50": "#fef3f1",
-              "100": "#fce7e3",
-              "200": "#f9cfc7",
-              "300": "#f5b7ab",
-              "400": "#f29f8f",
-              "500": "#A03928", // Base
-              "600": "#903324",
-              "700": "#782b1e",
-              "800": "#602218",
-              "900": "#4b1a13",
-              "950": "#31110c"
-            },
-            warning: { // Warning/Delayed: #D68C3D
-              "50": "#fffaf2",
-              "100": "#fef4e6",
-              "200": "#fde9cc",
-              "300": "#fbdea1",
-              "400": "#f9d377",
-              "500": "#D68C3D", // Base
-              "600": "#c07d37",
-              "700": "#a0692e",
-              "800": "#805425",
-              "900": "#65411d",
-              "950": "#422a13"
-            },
-            accent: { // Neutral/Background: #F8F4EA
-              "50": "#FEFDFC",
-              "100": "#F8F4EA", // Base for light backgrounds
-              "200": "#F2EADC",
-              "300": "#EBE0CE",
-              "400": "#E5D6C0",
-              "500": "#DECCB2",
-              "600": "#C9B9A0",
-              "700": "#B4A58D",
-              "800": "#9F927B",
-              "900": "#8A7F68",
-              "950": "#746C55"
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coconut Garden Tenant Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: { // App Main Color: #498459
+                "50": "#f3f9f5",
+                "100": "#e7f3ec",
+                "200": "#cfead9",
+                "300": "#b7e0c6",
+                "400": "#9fd7b3",
+                "500": "#498459", // Base
+                "600": "#427750",
+                "700": "#386444",
+                "800": "#2e5138",
+                "900": "#243e2c",
+                "950": "#1a2b20"
+              },
+              success: { // Success: #1F4937
+                "50": "#f0f5f3",
+                "100": "#e2ebe7",
+                "200": "#c4d7d0",
+                "300": "#a7c3b8",
+                "400": "#89afa1",
+                "500": "#1F4937", // Base
+                "600": "#1c4130",
+                "700": "#18392a",
+                "800": "#142f23",
+                "900": "#10251c",
+                "950": "#0c1b14"
+              },
+              error: { // Error: #A03928
+                "50": "#fef3f1",
+                "100": "#fce7e3",
+                "200": "#f9cfc7",
+                "300": "#f5b7ab",
+                "400": "#f29f8f",
+                "500": "#A03928", // Base
+                "600": "#903324",
+                "700": "#782b1e",
+                "800": "#602218",
+                "900": "#4b1a13",
+                "950": "#31110c"
+              },
+              warning: { // Warning/Delayed: #D68C3D
+                "50": "#fffaf2",
+                "100": "#fef4e6",
+                "200": "#fde9cc",
+                "300": "#fbdea1",
+                "400": "#f9d377",
+                "500": "#D68C3D", // Base
+                "600": "#c07d37",
+                "700": "#a0692e",
+                "800": "#805425",
+                "900": "#65411d",
+                "950": "#422a13"
+              },
+              accent: { // Neutral/Background: #F8F4EA
+                "50": "#FEFDFC",
+                "100": "#F8F4EA", // Base for light backgrounds
+                "200": "#F2EADC",
+                "300": "#EBE0CE",
+                "400": "#E5D6C0",
+                "500": "#DECCB2",
+                "600": "#C9B9A0",
+                "700": "#B4A58D",
+                "800": "#9F927B",
+                "900": "#8A7F68",
+                "950": "#746C55"
+              }
             }
           }
         }
       }
-    }
-  </script>
+    </script>
   <script type="importmap">
 {
   "imports": {
@@ -91,11 +91,10 @@
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
-
-<body>
-  <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
-
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>

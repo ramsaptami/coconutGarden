@@ -1,6 +1,7 @@
+
 {
   "name": "Coconut Garden Tenant Tracker",
-  "description": "A React application to manage tenant information, track monthly rent payments, and send payment reminders using Gemini API. Helps landlords efficiently oversee their rental properties.",
+  "description": "A React application to manage tenant information, track monthly rent payments, and send payment reminders. Helps landlords efficiently oversee their rental properties.",
   "requestFramePermissions": [],
   "prompt": ""
 }

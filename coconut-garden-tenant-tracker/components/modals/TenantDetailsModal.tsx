@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Tenant, Payment, PaymentStatus } from '../../types'; 
 import Modal from './Modal';
 import { UserCircleIcon, EnvelopeIcon, PhoneIcon, BriefcaseIcon, CalendarDaysIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, TrashIcon, ShieldCheckIcon, ShieldExclamationIcon } from '../icons';
 import { CURRENCY_SYMBOL } from '../../constants';
-import { formatDate_dd_mmm_yyyy } from '../../services/geminiService';
+import { formatDate_dd_mmm_yyyy } from '../../services/formatService';
 
 interface TenantDetailsModalProps {
   isOpen: boolean;

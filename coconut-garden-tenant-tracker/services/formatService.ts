@@ -1,4 +1,3 @@
-
 import { CURRENCY_SYMBOL } from '../constants';
 
 // Log a warning if API_KEY is not set, as other AI features might depend on it.
