@@ -67,9 +67,7 @@ const App = (): JSX.Element => {
         displayError = err.message; // Base error message
         if (err.message === "API environment variables not configured." || err.message.startsWith("Supabase Project URL or Anon Key is not defined")) {
           displayError = "Critical Supabase environment variables (SUPABASE_PROJECT_URL or SUPABASE_ANON_KEY) are missing. " +
-            "1. Ensure these are correctly set in your Vercel project settings. " +
-            "2. If using a build tool like Vite, prefix them (e.g., VITE_SUPABASE_PROJECT_URL) in Vercel and access via `import.meta.env` in your code. " +
-            "3. For Create React App, use `REACT_APP_` prefix and access via `process.env`.";
+            "Please ensure these are correctly set in your Vercel project settings.";
         } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
           displayError += " (Hint: Could not connect to the backend. Please verify your `SUPABASE_PROJECT_URL` environment variable setting on Vercel, your internet connection, and that your Supabase project is running.)";
         } else if (err.message.includes('Forbidden') || err.message.includes('Unauthorized') || err.message.includes('401') || err.message.includes('403')) {
