@@ -4,21 +4,14 @@ import { Tenant, Payment } from '../types';
 // =================================================================================
 // Configuration is now sourced from Environment Variables
 // Please set SUPABASE_PROJECT_URL and SUPABASE_ANON_KEY in your Vercel project settings.
-// Also ensure API_KEY (for Gemini) is set.
 // =================================================================================
 
 const SUPABASE_PROJECT_URL = process.env.SUPABASE_PROJECT_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
-// Check if the configuration values are loaded correctly from environment variables
-if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) {
-  const errorMsg = "Supabase Project URL or Anon Key is not defined in environment variables. " +
-    "Please set SUPABASE_PROJECT_URL and SUPABASE_ANON_KEY in your hosting environment (e.g., Vercel project settings).";
-  console.error(errorMsg);
-  // The app will load, but API calls will fail. 
-  // The UI in App.tsx handles and displays errors if API calls fail due to this.
-}
-
+// API_BASE_URL and commonHeaders are defined using the above constants.
+// If the constants are undefined, their usage will lead to issues,
+// but the checks within each function below will throw specific errors first.
 const API_BASE_URL = `${SUPABASE_PROJECT_URL}/rest/v1`;
 
 const commonHeaders = {
@@ -27,10 +20,22 @@ const commonHeaders = {
   'Content-Type': 'application/json',
 };
 
+function checkSupabaseConfiguration() {
+  if (!SUPABASE_PROJECT_URL && !SUPABASE_ANON_KEY) {
+    throw new Error("Both SUPABASE_PROJECT_URL and SUPABASE_ANON_KEY are not defined in environment variables.");
+  }
+  if (!SUPABASE_PROJECT_URL) {
+    throw new Error("SUPABASE_PROJECT_URL is not defined in environment variables.");
+  }
+  if (!SUPABASE_ANON_KEY) {
+    throw new Error("SUPABASE_ANON_KEY is not defined in environment variables.");
+  }
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
+  // This specific check for config is somewhat redundant if calling functions check first,
+  // but acts as a safeguard.
   if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) {
-    // This check is a bit redundant if the initial check leads to non-functional API_BASE_URL/commonHeaders
-    // but kept for safety in case of partial configuration.
     throw new Error("API configuration environment variables are missing. Cannot process the request.");
   }
   if (!response.ok) {
@@ -52,7 +57,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 // Tenant API Functions
 export async function fetchTenants(): Promise<Tenant[]> {
-  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API environment variables not configured.");
+  checkSupabaseConfiguration();
   const response = await fetch(`${API_BASE_URL}/tenants?select=*&order=name.asc`, {
     headers: commonHeaders,
   });
@@ -60,7 +65,7 @@ export async function fetchTenants(): Promise<Tenant[]> {
 }
 
 export async function addTenant(tenantData: Omit<Tenant, 'id'>): Promise<Tenant> {
-  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API environment variables not configured.");
+  checkSupabaseConfiguration();
   const response = await fetch(`${API_BASE_URL}/tenants`, {
     method: 'POST',
     headers: {
@@ -77,7 +82,7 @@ export async function addTenant(tenantData: Omit<Tenant, 'id'>): Promise<Tenant>
 }
 
 export async function deleteTenant(tenantId: string): Promise<void> {
-  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API environment variables not configured.");
+  checkSupabaseConfiguration();
   const deleteUrl = `${API_BASE_URL}/tenants?id=eq.${tenantId}`;
 
   const response = await fetch(deleteUrl, {
@@ -104,7 +109,7 @@ export async function deleteTenant(tenantId: string): Promise<void> {
 
 // Payment API Functions
 export async function fetchPayments(): Promise<Payment[]> {
-  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API environment variables not configured.");
+  checkSupabaseConfiguration();
   const response = await fetch(`${API_BASE_URL}/payments?select=*&order=created_at.desc`, {
     headers: commonHeaders,
   });
@@ -112,7 +117,7 @@ export async function fetchPayments(): Promise<Payment[]> {
 }
 
 export async function recordPayment(paymentData: Omit<Payment, 'id'>): Promise<Payment> {
-  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) throw new Error("API environment variables not configured.");
+  checkSupabaseConfiguration();
   const response = await fetch(`${API_BASE_URL}/payments`, {
     method: 'POST',
     headers: {

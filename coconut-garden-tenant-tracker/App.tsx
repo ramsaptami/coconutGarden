@@ -65,9 +65,16 @@ const App = (): JSX.Element => {
       let displayError = 'Failed to load data. Please try again.';
       if (err instanceof Error) {
         displayError = err.message; // Base error message
-        if (err.message === "API environment variables not configured." || err.message.startsWith("Supabase Project URL or Anon Key is not defined")) {
-          displayError = "Critical Supabase environment variables (SUPABASE_PROJECT_URL or SUPABASE_ANON_KEY) are missing. " +
+
+        if (err.message === "Both SUPABASE_PROJECT_URL and SUPABASE_ANON_KEY are not defined in environment variables.") {
+          displayError = "Critical Supabase environment variables SUPABASE_PROJECT_URL and SUPABASE_ANON_KEY are missing. " +
             "Please ensure these are correctly set in your Vercel project settings.";
+        } else if (err.message === "SUPABASE_PROJECT_URL is not defined in environment variables.") {
+          displayError = "Critical Supabase environment variable SUPABASE_PROJECT_URL is missing. " +
+            "Please ensure this is correctly set in your Vercel project settings.";
+        } else if (err.message === "SUPABASE_ANON_KEY is not defined in environment variables.") {
+          displayError = "Critical Supabase environment variable SUPABASE_ANON_KEY is missing. " +
+            "Please ensure this is correctly set in your Vercel project settings.";
         } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
           displayError += " (Hint: Could not connect to the backend. Please verify your `SUPABASE_PROJECT_URL` environment variable setting on Vercel, your internet connection, and that your Supabase project is running.)";
         } else if (err.message.includes('Forbidden') || err.message.includes('Unauthorized') || err.message.includes('401') || err.message.includes('403')) {
