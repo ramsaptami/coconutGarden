@@ -66,19 +66,19 @@ const App = (): JSX.Element => {
       if (err instanceof Error) {
         displayError = err.message; // Base error message
 
-        if (err.message === "Both SUPABASE_PROJECT_URL and SUPABASE_ANON_KEY are not defined in environment variables.") {
-          displayError = "Critical Supabase environment variables SUPABASE_PROJECT_URL and SUPABASE_ANON_KEY are missing. " +
-            "Please ensure these are correctly set in your Vercel project settings.";
-        } else if (err.message === "SUPABASE_PROJECT_URL is not defined in environment variables.") {
-          displayError = "Critical Supabase environment variable SUPABASE_PROJECT_URL is missing. " +
-            "Please ensure this is correctly set in your Vercel project settings.";
-        } else if (err.message === "SUPABASE_ANON_KEY is not defined in environment variables.") {
-          displayError = "Critical Supabase environment variable SUPABASE_ANON_KEY is missing. " +
-            "Please ensure this is correctly set in your Vercel project settings.";
+        if (err.message === "Both VITE_SUPABASE_PROJECT_URL and VITE_SUPABASE_ANON_KEY are not defined in environment variables.") {
+          displayError = "Critical Supabase environment variables VITE_SUPABASE_PROJECT_URL and VITE_SUPABASE_ANON_KEY are missing. " +
+            "Please ensure these are correctly set with the 'VITE_' prefix in your Vercel project settings.";
+        } else if (err.message === "VITE_SUPABASE_PROJECT_URL is not defined in environment variables.") {
+          displayError = "Critical Supabase environment variable VITE_SUPABASE_PROJECT_URL is missing. " +
+            "Please ensure this is correctly set with the 'VITE_' prefix in your Vercel project settings.";
+        } else if (err.message === "VITE_SUPABASE_ANON_KEY is not defined in environment variables.") {
+          displayError = "Critical Supabase environment variable VITE_SUPABASE_ANON_KEY is missing. " +
+            "Please ensure this is correctly set with the 'VITE_' prefix in your Vercel project settings.";
         } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-          displayError += " (Hint: Could not connect to the backend. Please verify your `SUPABASE_PROJECT_URL` environment variable setting on Vercel, your internet connection, and that your Supabase project is running.)";
+          displayError += " (Hint: Could not connect to the backend. Please verify your `VITE_SUPABASE_PROJECT_URL` environment variable setting on Vercel, your internet connection, and that your Supabase project is running.)";
         } else if (err.message.includes('Forbidden') || err.message.includes('Unauthorized') || err.message.includes('401') || err.message.includes('403')) {
-          displayError += " (Hint: Authorization error. Ensure your `SUPABASE_PROJECT_URL` and `SUPABASE_ANON_KEY` environment variables on Vercel are correct and that RLS policies allow access.)";
+          displayError += " (Hint: Authorization error. Ensure your `VITE_SUPABASE_PROJECT_URL` and `VITE_SUPABASE_ANON_KEY` environment variables on Vercel are correct and that RLS policies allow access.)";
         }
       }
       setError(displayError);
@@ -130,9 +130,9 @@ const App = (): JSX.Element => {
         if (err.message.toLowerCase().includes('violates foreign key constraint')) {
           displayError += " (Hint: This often means the tenant has existing payment records. Check your `payments` table's foreign key to `tenants`. It might need `ON DELETE CASCADE` behavior in your Supabase table settings if you want associated payments to be deleted automatically. Alternatively, ensure RLS for DELETE on `tenants` is correctly configured.)";
         } else if (err.message.includes('Forbidden') || err.message.includes('Unauthorized') || err.message.includes('403') || err.message.includes('401')) {
-          displayError += " (Hint: Check your Supabase Row Level Security (RLS) policies for DELETE operations on the 'tenants' table. Also, ensure your `SUPABASE_PROJECT_URL` and `SUPABASE_ANON_KEY` environment variables on Vercel are correct for your project.)";
+          displayError += " (Hint: Check your Supabase Row Level Security (RLS) policies for DELETE operations on the 'tenants' table. Also, ensure your `VITE_SUPABASE_PROJECT_URL` and `VITE_SUPABASE_ANON_KEY` environment variables on Vercel are correct for your project.)";
         } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-          displayError += " (Hint: Could not connect to the backend. Please verify your `SUPABASE_PROJECT_URL` environment variable on Vercel and your internet connection.)";
+          displayError += " (Hint: Could not connect to the backend. Please verify your `VITE_SUPABASE_PROJECT_URL` environment variable on Vercel and your internet connection.)";
         }
       }
       setError(errorPrefix + displayError);

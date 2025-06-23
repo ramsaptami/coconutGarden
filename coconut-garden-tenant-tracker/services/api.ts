@@ -2,41 +2,39 @@
 import { Tenant, Payment } from '../types';
 
 // =================================================================================
-// Configuration is now sourced from Environment Variables
-// Please set SUPABASE_PROJECT_URL and SUPABASE_ANON_KEY in your Vercel project settings.
+// Configuration is now sourced from Environment Variables using Vite's standard.
+// Please ensure your Vercel project settings have variables named:
+// VITE_SUPABASE_PROJECT_URL
+// VITE_SUPABASE_ANON_KEY
 // =================================================================================
 
-const SUPABASE_PROJECT_URL = process.env.SUPABASE_PROJECT_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const VITE_SUPABASE_PROJECT_URL = process.env.VITE_SUPABASE_PROJECT_URL;
+const VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 
-// API_BASE_URL and commonHeaders are defined using the above constants.
-// If the constants are undefined, their usage will lead to issues,
-// but the checks within each function below will throw specific errors first.
-const API_BASE_URL = `${SUPABASE_PROJECT_URL}/rest/v1`;
+const API_BASE_URL = `${VITE_SUPABASE_PROJECT_URL}/rest/v1`;
 
 const commonHeaders = {
-  'apikey': SUPABASE_ANON_KEY!,
-  'Authorization': `Bearer ${SUPABASE_ANON_KEY!}`,
+  'apikey': VITE_SUPABASE_ANON_KEY!,
+  'Authorization': `Bearer ${VITE_SUPABASE_ANON_KEY!}`,
   'Content-Type': 'application/json',
 };
 
 function checkSupabaseConfiguration() {
-  if (!SUPABASE_PROJECT_URL && !SUPABASE_ANON_KEY) {
-    throw new Error("Both SUPABASE_PROJECT_URL and SUPABASE_ANON_KEY are not defined in environment variables.");
+  if (!VITE_SUPABASE_PROJECT_URL && !VITE_SUPABASE_ANON_KEY) {
+    throw new Error("Both VITE_SUPABASE_PROJECT_URL and VITE_SUPABASE_ANON_KEY are not defined in environment variables.");
   }
-  if (!SUPABASE_PROJECT_URL) {
-    throw new Error("SUPABASE_PROJECT_URL is not defined in environment variables.");
+  if (!VITE_SUPABASE_PROJECT_URL) {
+    throw new Error("VITE_SUPABASE_PROJECT_URL is not defined in environment variables.");
   }
-  if (!SUPABASE_ANON_KEY) {
-    throw new Error("SUPABASE_ANON_KEY is not defined in environment variables.");
+  if (!VITE_SUPABASE_ANON_KEY) {
+    throw new Error("VITE_SUPABASE_ANON_KEY is not defined in environment variables.");
   }
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
-  // This specific check for config is somewhat redundant if calling functions check first,
-  // but acts as a safeguard.
-  if (!SUPABASE_PROJECT_URL || !SUPABASE_ANON_KEY) {
-    throw new Error("API configuration environment variables are missing. Cannot process the request.");
+  if (!VITE_SUPABASE_PROJECT_URL || !VITE_SUPABASE_ANON_KEY) {
+    // This check is slightly redundant if calling functions check first, but good safeguard.
+    throw new Error("API configuration (Vite-prefixed) environment variables are missing. Cannot process the request.");
   }
   if (!response.ok) {
     let errorMessage = `API Error: ${response.status} ${response.statusText}`;
