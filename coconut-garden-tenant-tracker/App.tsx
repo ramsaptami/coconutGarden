@@ -496,9 +496,7 @@ const App = (): JSX.Element => {
             {filteredProcessedHouses.map(houseData => (
               <HouseCard
                 key={houseData.id}
-                house={houseData} 
-                tenant={houseData.tenant} // This is already part of houseData as per HouseWithTenantAndPayment
-                paymentForCurrentMonth={houseData.paymentForCurrentMonth} // This is also part of houseData
+                house={houseData}
                 onAssignTenant={handleOpenAssignNewTenantModal}
                 onAssignExistingTenant={handleOpenAssignExistingTenantModal}
                 onRemoveTenantFromHouse={handleRemoveTenantFromHouse}

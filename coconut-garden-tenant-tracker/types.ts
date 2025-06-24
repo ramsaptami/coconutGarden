@@ -1,4 +1,4 @@
-import { House } from './types'; // Forward declaration for extend
+// Forward declaration for extend - This comment is no longer needed as the import is removed.
 
 export interface House {
   id: string; // e.g., "H3", "H4"

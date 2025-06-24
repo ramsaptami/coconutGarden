@@ -36,7 +36,7 @@ function checkSupabaseConfiguration() {
   }
 
   if (missingVars.length > 0) {
-    throw new Error(`${missingVars.join(' and ')} ${missingVars.length > 1 ? 'are' : 'is'} not defined in environment variables. Ensure env vars are set (e.g., in .env file for local development or Vercel project settings for deployment) and the app is served/built by Vite.`);
+    throw new Error(`${missingVars.join(' and ')} ${missingVars.length > 1 ? 'are' : 'is'} not defined in environment variables. Ensure env vars are set (e.g., in .env file for local development or Vercel project settings for deployment). For local development, you must run the app using the Vite development server (e.g., 'npm run dev').`);
   }
 }
 
@@ -66,18 +66,18 @@ async function handleResponse<T>(response: Response): Promise<T> {
 // SIMULATED: In a real scenario, this would fetch from your Supabase 'houses' table.
 export async function fetchHouses(): Promise<House[]> {
   checkSupabaseConfiguration(); 
-  console.warn("API: fetchHouses is returning a placeholder. Implement backend integration.");
+  // console.warn("API: fetchHouses is returning a placeholder. Implement backend integration.");
   // Example of what it might look like if fetching:
-  // const response = await fetch(`${API_BASE_URL}/houses?select=*`, { headers: commonHeaders });
-  // return handleResponse<House[]>(response);
-  return Promise.resolve([
-    { id: "H3", house_number: "3", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: "H4", house_number: "4", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: "H5", house_number: "5", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: "H6", house_number: "6", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: "H8", house_number: "8", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: "H9", house_number: "9", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  ]);
+  const response = await fetch(`${API_BASE_URL}/houses?select=*`, { headers: commonHeaders });
+  return handleResponse<House[]>(response);
+  // return Promise.resolve([
+  //   { id: "H3", house_number: "3", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  //   { id: "H4", house_number: "4", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  //   { id: "H5", house_number: "5", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  //   { id: "H6", house_number: "6", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  //   { id: "H8", house_number: "8", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  //   { id: "H9", house_number: "9", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  // ]);
 }
 
 export async function updateHouse(houseId: string, data: Partial<Pick<House, 'current_tenant_id'>>): Promise<House> {

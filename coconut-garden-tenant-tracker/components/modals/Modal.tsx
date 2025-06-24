@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { XCircleIcon } from '../icons';
 
 interface ModalProps {
@@ -12,6 +12,7 @@ interface ModalProps {
 
 const Modal = ({ isOpen, onClose, title, children, size = 'md' }: ModalProps): JSX.Element | null => {
   const [showContent, setShowContent] = useState(false);
+  const modalPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -23,6 +24,26 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }: ModalProps): J
       setShowContent(false); 
     }
   }, [isOpen]);
+
+  // Handle click outside to close
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalPanelRef.current && !modalPanelRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    if (isOpen && showContent) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, showContent, onClose]);
+
 
   if (!isOpen) return null;
 
@@ -44,7 +65,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }: ModalProps): J
 
   return (
     <div className={`${backdropBaseClasses} ${backdropTransitionClasses} ${backdropDynamicClasses}`}>
-      <div className={`${panelBaseClasses} ${panelTransitionClasses} ${panelDynamicClasses}`}>
+      <div ref={modalPanelRef} className={`${panelBaseClasses} ${panelTransitionClasses} ${panelDynamicClasses}`}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold text-primary-800">{title}</h2>
           <button

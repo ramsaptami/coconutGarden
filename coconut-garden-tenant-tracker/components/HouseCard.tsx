@@ -197,7 +197,7 @@ const HouseCard: React.FC<HouseCardProps> = ({
             <button
               onClick={() => onAssignTenant(house.id)}
               disabled={isSubmitting}
-              className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
+              className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
             >
               <UserPlusIcon className="w-5 h-5" />
               <span>Assign New Tenant</span>
@@ -205,7 +205,7 @@ const HouseCard: React.FC<HouseCardProps> = ({
             <button
               onClick={() => onAssignExistingTenant(house.id, house.house_number)}
               disabled={isSubmitting}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
+              className="w-full bg-success-500 hover:bg-success-600 text-white font-bold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
             >
               <UserGroupIcon className="w-5 h-5" />
               <span>Assign Existing Tenant</span>

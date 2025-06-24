@@ -62,9 +62,13 @@ const AssignExistingTenantModal: React.FC<AssignExistingTenantModalProps> = ({
         )}
 
         {unassignedTenants.length === 0 ? (
-          <p className="text-center text-accent-700 py-4">
-            No unassigned tenants available. Please add a new tenant first.
-          </p>
+          <div className="text-center text-accent-700 py-4 px-2">
+            <p className="font-semibold">No Unassigned Tenants Available.</p>
+            <p className="text-xs mt-1">
+              This could mean all tenants are currently assigned to houses, or there might be an issue loading tenant data.
+              If you expect unassigned tenants, please ensure data has loaded correctly and check your RLS policies for the 'tenants' table.
+            </p>
+          </div>
         ) : (
           <div>
             <label htmlFor="tenantSelect" className="block text-sm font-medium text-primary-700 mb-1">Select Tenant *</label>
@@ -76,7 +80,7 @@ const AssignExistingTenantModal: React.FC<AssignExistingTenantModalProps> = ({
               className={inputBaseClasses}
               disabled={isSubmitting}
             >
-              <option value="" disabled>-- Select a tenant --</option>
+              <option value="" disabled={selectedTenantId !== ''}>-- Select a tenant --</option>
               {unassignedTenants.map(tenant => (
                 <option key={tenant.id} value={tenant.id}>
                   {tenant.name} ({tenant.email})
