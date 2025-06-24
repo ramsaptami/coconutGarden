@@ -1,20 +1,29 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Tenant, Payment, PaymentStatus } from './types'; 
+import { House, Tenant, Payment, PaymentStatus } from './types'; 
 import { RENT_DUE_DAY } from './constants';
 import * as api from './services/api'; 
 import { generateReminderMessage } from './services/formatService';
 
 import Header from './components/Header';
-import TenantCard from './components/TenantCard';
+import HouseCard from './components/HouseCard'; // New
 import AddTenantModal from './components/modals/AddTenantModal';
 import TenantDetailsModal from './components/modals/TenantDetailsModal';
 import ReminderModal from './components/modals/ReminderModal';
 import RecordPaymentModal from './components/modals/RecordPaymentModal';
-import BulkRecordPaymentModal from './components/modals/BulkRecordPaymentModal'; 
+// BulkRecordPaymentModal removed for now
 import ConfirmDeleteModal from './components/modals/ConfirmDeleteModal'; 
-import { UserCircleIcon, ExclamationTriangleIcon, UsersIcon, CurrencyDollarIcon } from './components/icons';
+import { UserCircleIcon, ExclamationTriangleIcon, UsersIcon } from './components/icons';
 
+
+const initialHousesData: Omit<House, 'current_tenant_id'>[] = [
+  { id: "H3", house_number: "3" },
+  { id: "H4", house_number: "4" },
+  { id: "H5", house_number: "5" },
+  { id: "H6", house_number: "6" },
+  { id: "H8", house_number: "8" },
+  { id: "H9", house_number: "9" },
+];
 
 interface PaymentRecordContext {
   tenant_id: string;
@@ -24,7 +33,16 @@ interface PaymentRecordContext {
   default_amount_paid: number;
 }
 
+interface HouseWithTenantAndPayment extends House {
+  tenant: Tenant | null;
+  paymentForCurrentMonth?: Payment;
+  paymentStatus: PaymentStatus;
+}
+
 const App = (): JSX.Element => {
+  const [houses, setHouses] = useState<House[]>(
+    initialHousesData.map(h => ({ ...h, current_tenant_id: null }))
+  );
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
 
@@ -34,16 +52,22 @@ const App = (): JSX.Element => {
   const [isSubmitting, setIsSubmitting] = useState(false); 
 
   const [isAddTenantModalOpen, setIsAddTenantModalOpen] = useState(false);
+  const [houseIdToAssignTenant, setHouseIdToAssignTenant] = useState<string | null>(null);
+
   const [isTenantDetailModalOpen, setIsTenantDetailModalOpen] = useState(false);
   const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
   const [isRecordPaymentModalOpen, setIsRecordPaymentModalOpen] = useState(false); 
-  const [isBulkPaymentModalOpen, setIsBulkPaymentModalOpen] = useState(false); 
   const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false); 
-  
+  // Add state for Modify Tenant Modal if needed later
+  // const [isModifyTenantModalOpen, setIsModifyTenantModalOpen] = useState(false);
+  // const [tenantToModify, setTenantToModify] = useState<Tenant | null>(null);
+
+
   const [selectedTenantForDetail, setSelectedTenantForDetail] = useState<Tenant | null>(null);
   const [tenantForReminder, setTenantForReminder] = useState<Tenant | null>(null);
   const [reminderMessage, setReminderMessage] = useState('');
   const [paymentRecordContext, setPaymentRecordContext] = useState<PaymentRecordContext | null>(null); 
+  
   const [tenantIdToDelete, setTenantIdToDelete] = useState<string | null>(null); 
   const [tenantNameToDelete, setTenantNameToDelete] = useState<string>(''); 
   
@@ -54,57 +78,113 @@ const App = (): JSX.Element => {
     setIsLoading(true);
     setError(null);
     try {
-      const [fetchedTenants, fetchedPayments] = await Promise.all([
+      // In a real app, you'd fetchHouses(), but we are initializing them statically for now.
+      // We need to fetch tenants and payments to link them.
+      const [fetchedTenants, fetchedPayments, /* fetchedHousesFromDB */] = await Promise.all([
         api.fetchTenants(),
-        api.fetchPayments() 
+        api.fetchPayments(),
+        // api.fetchHouses() // If houses were dynamic and stored tenant_ids
       ]);
+      
       setTenants(fetchedTenants);
       setPayments(fetchedPayments);
+
+      // If houses were fetched from DB and already had tenant_ids:
+      // setHouses(fetchedHousesFromDB); 
+      // Else, if tenants have house_id (not our current model):
+      // const updatedHouses = houses.map(h => {
+      //   const tenantInHouse = fetchedTenants.find(t => t.house_id === h.id);
+      //   return { ...h, current_tenant_id: tenantInHouse ? tenantInHouse.id : null };
+      // });
+      // setHouses(updatedHouses);
+
+      // For now, we assume houses are static and tenant_id might be set by other operations
+      // or if tenants table is the source of truth for house assignment (which it isn't here)
+
     } catch (err) {
       console.error("Failed to fetch data:", err);
       let displayError = 'Failed to load data. Please try again.';
       if (err instanceof Error) {
         displayError = err.message; // Base error message
-        
-        if (err.message === "Both VITE_SUPABASE_PROJECT_URL and VITE_SUPABASE_ANON_KEY are not defined in environment variables.") {
-            displayError = "Critical Supabase environment variables VITE_SUPABASE_PROJECT_URL and VITE_SUPABASE_ANON_KEY are missing. " +
-                           "Please ensure these are correctly set with the 'VITE_' prefix in your Vercel project settings.";
-        } else if (err.message === "VITE_SUPABASE_PROJECT_URL is not defined in environment variables.") {
-          displayError = "Critical Supabase environment variable VITE_SUPABASE_PROJECT_URL is missing. " +
-                          "Please ensure this is correctly set with the 'VITE_' prefix in your Vercel project settings.";
-        } else if (err.message === "VITE_SUPABASE_ANON_KEY is not defined in environment variables.") {
-            displayError = "Critical Supabase environment variable VITE_SUPABASE_ANON_KEY is missing. " +
-                           "Please ensure this is correctly set with the 'VITE_' prefix in your Vercel project settings.";
-        } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-            displayError += " (Hint: Could not connect to the backend. Please verify your `VITE_SUPABASE_PROJECT_URL` environment variable setting on Vercel, your internet connection, and that your Supabase project is running.)";
+         if (err.message.includes('VITE_SUPABASE')) {
+             displayError = `Critical Supabase configuration error: ${err.message}. Please ensure VITE_SUPABASE_PROJECT_URL and VITE_SUPABASE_ANON_KEY are correctly set in your Vercel project settings with the 'VITE_' prefix.`;
+         } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+            displayError += " (Hint: Could not connect to the backend. Verify Supabase URL, internet, and project status.)";
         } else if (err.message.includes('Forbidden') || err.message.includes('Unauthorized') || err.message.includes('401') || err.message.includes('403')) {
-            displayError += " (Hint: Authorization error. Ensure your `VITE_SUPABASE_PROJECT_URL` and `VITE_SUPABASE_ANON_KEY` environment variables on Vercel are correct and that RLS policies allow access.)";
+            displayError += " (Hint: Authorization error. Check Supabase URL/Key and RLS policies.)";
         }
       }
       setError(displayError);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, []); // Removed 'houses' from dependency array as it's static initially
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const handleAddTenant = async (tenantData: Omit<Tenant, 'id'>): Promise<void> => {
+  const handleOpenAssignTenantModal = (houseId: string) => {
+    setHouseIdToAssignTenant(houseId);
+    setIsAddTenantModalOpen(true);
+  };
+
+  const handleAddTenantAndAssignToHouse = async (tenantData: Omit<Tenant, 'id'>) => {
+    if (!houseIdToAssignTenant) return;
     setIsSubmitting(true);
     setError(null); 
     try {
       const newTenant = await api.addTenant(tenantData);
       setTenants(prev => [...prev, newTenant].sort((a, b) => a.name.localeCompare(b.name)));
+      
+      // Update the house to link the new tenant
+      await api.updateHouse(houseIdToAssignTenant, { current_tenant_id: newTenant.id });
+      setHouses(prevHouses => prevHouses.map(h => 
+        h.id === houseIdToAssignTenant ? { ...h, current_tenant_id: newTenant.id } : h
+      ));
+
       setIsAddTenantModalOpen(false);
+      setHouseIdToAssignTenant(null);
     } catch (err) {
-      console.error("App: Error adding tenant (modal will handle display):", err);
+      console.error("App: Error adding tenant and assigning to house:", err);
       throw err; 
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  const handleRemoveTenantFromHouse = async (houseId: string, tenantId: string) => {
+    // For now, just a confirmation. A modal could be added.
+    if (!window.confirm("Are you sure you want to remove this tenant from the house? The tenant record will remain.")) return;
+
+    setIsSubmitting(true);
+    setError(null);
+    try {
+        await api.updateHouse(houseId, { current_tenant_id: null });
+        setHouses(prevHouses => prevHouses.map(h => 
+            h.id === houseId ? { ...h, current_tenant_id: null } : h
+        ));
+        // Optionally, update tenant.house_id to null if it existed on tenant model
+        // setTenants(prevTenants => prevTenants.map(t => 
+        //     t.id === tenantId ? { ...t, house_id: null } : t
+        // ));
+    } catch (err) {
+        console.error("App: Error removing tenant from house:", err);
+        setError(err instanceof Error ? err.message : "Failed to remove tenant from house.");
+    } finally {
+        setIsSubmitting(false);
+    }
+  };
+  
+  const handleOpenModifyTenantModal = (tenant: Tenant) => {
+    // This would open a modal pre-filled with tenant's data
+    // For now, let's log and not implement the modal fully
+    console.log("Modify tenant:", tenant);
+    alert("Modify Tenant functionality to be implemented. See console.");
+    // setSelectedTenantForDetail(tenant);
+    // setIsModifyTenantModalOpen(true); 
+  };
+
 
   const handleOpenConfirmDeleteModal = (tenantId: string, tenantName: string) => {
     setTenantIdToDelete(tenantId);
@@ -119,9 +199,19 @@ const App = (): JSX.Element => {
     setIsSubmitting(true); 
     setError(null);
     try {
+      // Check if tenant is assigned to any house and unassign first
+      const houseOccupiedByTenant = houses.find(h => h.current_tenant_id === tenantIdToDelete);
+      if (houseOccupiedByTenant) {
+        await api.updateHouse(houseOccupiedByTenant.id, { current_tenant_id: null });
+        setHouses(prevHouses => prevHouses.map(h => 
+            h.id === houseOccupiedByTenant.id ? { ...h, current_tenant_id: null } : h
+        ));
+      }
+
       await api.deleteTenant(tenantIdToDelete);
       setTenants(prev => prev.filter(t => t.id !== tenantIdToDelete));
       setPayments(prev => prev.filter(p => p.tenant_id !== tenantIdToDelete)); 
+      
       setIsConfirmDeleteModalOpen(false);
       setTenantIdToDelete(null);
       setTenantNameToDelete('');
@@ -131,12 +221,12 @@ const App = (): JSX.Element => {
       let displayError = 'Please try again.';
       if (err instanceof Error) {
         displayError = err.message;
-        if (err.message.toLowerCase().includes('violates foreign key constraint')) {
-            displayError += " (Hint: This often means the tenant has existing payment records. Check your `payments` table's foreign key to `tenants`. It might need `ON DELETE CASCADE` behavior in your Supabase table settings if you want associated payments to be deleted automatically. Alternatively, ensure RLS for DELETE on `tenants` is correctly configured.)";
+         if (err.message.toLowerCase().includes('violates foreign key constraint')) {
+            displayError += " (Hint: This often means related records (e.g., payments) still exist and prevent deletion. Ensure your database handles this, perhaps with `ON DELETE CASCADE` if appropriate, or delete related records first. Also check RLS policies.)";
         } else if (err.message.includes('Forbidden') || err.message.includes('Unauthorized') || err.message.includes('403') || err.message.includes('401')) {
-          displayError += " (Hint: Check your Supabase Row Level Security (RLS) policies for DELETE operations on the 'tenants' table. Also, ensure your `VITE_SUPABASE_PROJECT_URL` and `VITE_SUPABASE_ANON_KEY` environment variables on Vercel are correct for your project.)";
+          displayError += " (Hint: Check Supabase RLS policies for DELETE on 'tenants' and related tables. Ensure API key has sufficient permissions.)";
         } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-            displayError += " (Hint: Could not connect to the backend. Please verify your `VITE_SUPABASE_PROJECT_URL` environment variable on Vercel and your internet connection.)";
+            displayError += " (Hint: Network issue. Check Supabase URL/Key and internet.)";
         }
       }
       setError(errorPrefix + displayError);
@@ -152,13 +242,7 @@ const App = (): JSX.Element => {
     amount_paid_from_modal: number, 
     paid_date_from_modal: string
   ): Promise<Payment> => { 
-    const paymentData: Omit<Payment, 'id'> = {
-        tenant_id,
-        month,
-        year,
-        paid_date: paid_date_from_modal, 
-        amount_paid: amount_paid_from_modal,
-    };
+    const paymentData: Omit<Payment, 'id'> = { tenant_id, month, year, paid_date: paid_date_from_modal, amount_paid: amount_paid_from_modal };
     try {
         const newPayment = await api.recordPayment(paymentData);
         return newPayment;
@@ -172,12 +256,14 @@ const App = (): JSX.Element => {
     setPaymentRecordContext({ tenant_id, tenant_name, month, year, default_amount_paid });
     setIsRecordPaymentModalOpen(true);
   };
-
-  const handleTriggerRecordPaymentForCurrentMonth = (tenant: Tenant) => {
+  
+  // Triggered from HouseCard for its current tenant
+  const handleTriggerRecordPaymentForTenant = (tenant: Tenant) => {
     const today = new Date();
     openRecordPaymentModal(tenant.id, tenant.name, today.getMonth() + 1, today.getFullYear(), tenant.rent_amount);
   };
   
+  // Triggered from TenantDetailsModal for a specific month
   const handleTriggerRecordPaymentForPastMonth = (tenant_id: string, tenant_name: string, month: number, year: number, default_amount_paid: number) => {
     openRecordPaymentModal(tenant_id, tenant_name, month, year, default_amount_paid);
   };
@@ -188,11 +274,8 @@ const App = (): JSX.Element => {
     setError(null);
     try {
       const newPayment = await markPayment(
-        paymentRecordContext.tenant_id,
-        paymentRecordContext.month,
-        paymentRecordContext.year,
-        amount_paid_from_modal,
-        paid_date_from_modal
+        paymentRecordContext.tenant_id, paymentRecordContext.month, paymentRecordContext.year,
+        amount_paid_from_modal, paid_date_from_modal
       );
       setPayments(prevPayments => {
           const otherPayments = prevPayments.filter(p => !(p.tenant_id === paymentRecordContext.tenant_id && p.month === paymentRecordContext.month && p.year === paymentRecordContext.year));
@@ -200,6 +283,10 @@ const App = (): JSX.Element => {
       });
       setIsRecordPaymentModalOpen(false); 
       setPaymentRecordContext(null);
+      if (isTenantDetailModalOpen) { // Refresh details modal if open
+         const tenant = tenants.find(t => t.id === paymentRecordContext.tenant_id);
+         if (tenant) setSelectedTenantForDetail(tenant); // This re-renders detail modal with new payment
+      }
     } catch (err) {
       console.error("App: Error confirming payment (modal will handle display):", err);
       throw err; 
@@ -207,74 +294,6 @@ const App = (): JSX.Element => {
       setIsSubmitting(false);
     }
   };
-
-  const handleOpenBulkPaymentModal = () => {
-    setIsBulkPaymentModalOpen(true);
-  };
-
-  const handleCloseBulkPaymentModal = () => {
-    setIsBulkPaymentModalOpen(false);
-  };
-
-  const handleBulkRecordPayments = async (
-    selectedTenantIds: string[],
-    paymentDate: string,
-    useDefaultAmount: boolean,
-    commonAmount?: number
-  ) => {
-    setIsSubmitting(true);
-    setError(null);
-    const today = new Date();
-    const currentMonth = today.getMonth() + 1;
-    const currentYear = today.getFullYear();
-    let newlyRecordedPayments: Payment[] = [];
-    let someFailed = false;
-
-    const paymentPromises = selectedTenantIds.map(tenantId => {
-      const tenant = tenants.find(t => t.id === tenantId);
-      if (!tenant) return Promise.resolve(null); 
-
-      const amountToPay = useDefaultAmount ? tenant.rent_amount : commonAmount!;
-      return markPayment(tenant.id, currentMonth, currentYear, amountToPay, paymentDate)
-        .catch(err => {
-            console.error(`Error in bulk payment for tenant ${tenant.name} (ID: ${tenant.id}):`, err);
-            someFailed = true;
-            return null; 
-        });
-    });
-
-    try {
-        const results = await Promise.all(paymentPromises); 
-          
-        results.forEach(result => {
-            if (result) { 
-                newlyRecordedPayments.push(result);
-            }
-        });
-
-        if (newlyRecordedPayments.length > 0) {
-        setPayments(prevPayments => {
-            const updatedPaymentsMap = new Map(prevPayments.map(p => [`${p.tenant_id}-${p.year}-${p.month}`, p]));
-            newlyRecordedPayments.forEach(newP => {
-            updatedPaymentsMap.set(`${newP.tenant_id}-${newP.year}-${newP.month}`, newP); 
-            });
-            return Array.from(updatedPaymentsMap.values());
-        });
-        }
-
-        if (someFailed) {
-            throw new Error("One or more payments in the bulk operation failed. Please check tenant statuses or review the console for more details.");
-        } else if (newlyRecordedPayments.length === selectedTenantIds.length && newlyRecordedPayments.length > 0) { 
-            setIsBulkPaymentModalOpen(false);
-        }
-    } catch (err) {
-        console.error("App: Error during bulk payment processing (modal will handle display):", err);
-        throw err; // Propagate for modal to display
-    } finally {
-        setIsSubmitting(false);
-    }
-  };
-
 
   const handleSendReminder = (tenant: Tenant) => { 
     setTenantForReminder(tenant);
@@ -296,10 +315,6 @@ const App = (): JSX.Element => {
     setIsTenantDetailModalOpen(true);
   };
 
-  const handleOpenAddTenantModal = () => {
-    setIsAddTenantModalOpen(true);
-  };
-
   const getPaymentsForTenant = (tenantId: string): Payment[] => {
     return payments.filter(p => p.tenant_id === tenantId);
   };
@@ -313,7 +328,8 @@ const App = (): JSX.Element => {
       .sort((a,b) => new Date(b.paid_date!).getTime() - new Date(a.paid_date!).getTime())[0];
   };
 
-  const getTenantPaymentStatus = (tenant: Tenant, payment?: Payment): PaymentStatus => {
+  const getTenantPaymentStatus = (tenant: Tenant | null, payment?: Payment): PaymentStatus => {
+    if (!tenant) return PaymentStatus.Unpaid; // Or some other status for vacant
     const today = new Date();
     if (payment && payment.paid_date) return PaymentStatus.Paid;
     
@@ -321,6 +337,7 @@ const App = (): JSX.Element => {
     const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
     
+    // If tenant joined this month after the due day, they are not overdue for this month yet.
     if (join_date.getFullYear() === currentYear && 
         (join_date.getMonth() + 1) === currentMonth && 
         join_date.getDate() > RENT_DUE_DAY) {
@@ -330,29 +347,41 @@ const App = (): JSX.Element => {
     if (today.getDate() > RENT_DUE_DAY) return PaymentStatus.Overdue;
     return PaymentStatus.Unpaid;
   };
-
-  const filteredTenants = tenants.filter(tenant => {
-    const nameMatch = tenant.name.toLowerCase().includes(searchTerm.toLowerCase());
-    if (filterPaymentStatus === 'all') return nameMatch;
-    
-    const paymentCurrentMonth = getPaymentForTenantCurrentMonth(tenant.id);
-    const status = getTenantPaymentStatus(tenant, paymentCurrentMonth);
-    return nameMatch && status === filterPaymentStatus;
+  
+  const processedHouses: HouseWithTenantAndPayment[] = houses.map(house => {
+    const tenant = house.current_tenant_id ? tenants.find(t => t.id === house.current_tenant_id) || null : null;
+    const paymentForCurrentMonth = tenant ? getPaymentForTenantCurrentMonth(tenant.id) : undefined;
+    const paymentStatus = getTenantPaymentStatus(tenant, paymentForCurrentMonth);
+    return { ...house, tenant, paymentForCurrentMonth, paymentStatus };
   });
+
+  const filteredProcessedHouses = processedHouses.filter(houseData => {
+    if (filterPaymentStatus !== 'all' && houseData.paymentStatus !== filterPaymentStatus) {
+        return false;
+    }
+    if (searchTerm && houseData.tenant) {
+        return houseData.tenant.name.toLowerCase().includes(searchTerm.toLowerCase());
+    }
+    if (searchTerm && !houseData.tenant) { // If searching and house is vacant, don't match
+        return false;
+    }
+    return true;
+  });
+
 
   if (isLoading && !error) { 
     return (
       <div className="min-h-screen bg-accent-50 flex flex-col items-center justify-center text-center px-4">
         <UserCircleIcon className="w-24 h-24 text-primary-500 animate-pulse mb-4" />
-        <h2 className="text-2xl font-semibold text-primary-700">Loading Tenant Data...</h2>
-        <p className="text-primary-600">Please wait while we fetch the information.</p>
+        <h2 className="text-2xl font-semibold text-primary-700">Loading Data...</h2>
+        <p className="text-primary-600">Please wait.</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-accent-50 text-accent-900">
-      <Header onAddTenantClick={handleOpenAddTenantModal} />
+      <Header />
       
       <main className="container mx-auto p-4 md:p-8">
         {error && !isConfirmDeleteModalOpen && ( 
@@ -375,65 +404,72 @@ const App = (): JSX.Element => {
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <input 
                 type="text"
-                placeholder="Search tenants by name..."
-                className="w-full sm:flex-1 px-4 py-2 border border-accent-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+                placeholder="Search by tenant name..."
+                className="w-full sm:flex-1 px-4 py-2 border border-accent-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white text-accent-900 sm:text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                aria-label="Search tenants by name"
+                aria-label="Search by tenant name"
               />
-              <select
-                className="w-full sm:w-auto px-4 py-2 border border-accent-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
-                value={filterPaymentStatus}
-                onChange={(e) => setFilterPaymentStatus(e.target.value as PaymentStatus | 'all')}
-                aria-label="Filter tenants by payment status"
-              >
-                <option value="all">All Statuses</option>
-                <option value={PaymentStatus.Paid}>Paid</option>
-                <option value={PaymentStatus.Unpaid}>Unpaid</option>
-                <option value={PaymentStatus.Overdue}>Overdue</option>
-              </select>
+              <div className="relative w-full sm:w-auto">
+                <select
+                  className="appearance-none block w-full bg-white border border-accent-300 text-accent-900 py-2 pl-4 pr-8 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  value={filterPaymentStatus}
+                  onChange={(e) => setFilterPaymentStatus(e.target.value as PaymentStatus | 'all')}
+                  aria-label="Filter houses by tenant payment status"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value={PaymentStatus.Paid}>Paid</option>
+                  <option value={PaymentStatus.Unpaid}>Unpaid</option>
+                  <option value={PaymentStatus.Overdue}>Overdue</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-accent-600">
+                  <svg className="fill-current h-4 w-4" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                  </svg>
+                </div>
+              </div>
             </div>
-             <button
-                onClick={handleOpenBulkPaymentModal}
-                className="w-full sm:w-auto bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-4 rounded-md text-sm flex items-center justify-center space-x-2 transition-colors whitespace-nowrap"
-              >
-                <CurrencyDollarIcon className="w-5 h-5" />
-                <span>Bulk Mark Rental Payments</span>
-            </button>
+            {/* Bulk payment button removed */}
         </div>
 
-        {filteredTenants.length === 0 && !isLoading ? (
+        {filteredProcessedHouses.length === 0 && !isLoading ? (
           <div className="text-center py-10">
             <UsersIcon className="w-16 h-16 text-accent-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-primary-700">No Tenants Found</h3>
+            <h3 className="text-xl font-semibold text-primary-700">No Houses Match Criteria</h3>
             <p className="text-accent-700">
                 {searchTerm || filterPaymentStatus !== 'all' 
-                ? "No tenants match your current search/filter criteria." 
-                : "You haven't added any tenants yet. Click 'Add New Tenant' to get started."}
+                ? "No houses with tenants match your current search/filter." 
+                : "Displaying all houses."}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTenants.map(tenant => (
-              <TenantCard
-                key={tenant.id}
-                tenant={tenant}
-                paymentForCurrentMonth={getPaymentForTenantCurrentMonth(tenant.id)}
-                onTriggerRecordPayment={() => handleTriggerRecordPaymentForCurrentMonth(tenant)}
-                onViewDetails={() => openTenantDetailModal(tenant)}
-                onSendReminder={() => handleSendReminder(tenant)}
+            {filteredProcessedHouses.map(houseData => (
+              <HouseCard
+                key={houseData.id}
+                house={houseData}
+                tenant={houseData.tenant}
+                paymentForCurrentMonth={houseData.paymentForCurrentMonth}
+                onAssignTenant={handleOpenAssignTenantModal}
+                onRemoveTenantFromHouse={handleRemoveTenantFromHouse}
+                onModifyTenant={handleOpenModifyTenantModal} // Placeholder
+                onRecordPayment={handleTriggerRecordPaymentForTenant}
+                onSendReminder={handleSendReminder}
+                onViewTenantDetails={openTenantDetailModal}
+                isSubmitting={isSubmitting}
               />
             ))}
           </div>
         )}
       </main>
 
-      {isAddTenantModalOpen && (
+      {isAddTenantModalOpen && houseIdToAssignTenant && (
         <AddTenantModal
           isOpen={isAddTenantModalOpen}
-          onClose={() => setIsAddTenantModalOpen(false)}
-          onAddTenant={handleAddTenant}
+          onClose={() => { setIsAddTenantModalOpen(false); setHouseIdToAssignTenant(null); }}
+          onAddTenant={handleAddTenantAndAssignToHouse} // Changed handler
           isSubmitting={isSubmitting} 
+          // title={`Assign Tenant to House ${houses.find(h=>h.id === houseIdToAssignTenant)?.house_number}`} // Optional: dynamic title
         />
       )}
 
@@ -472,16 +508,7 @@ const App = (): JSX.Element => {
         />
       )}
 
-      {isBulkPaymentModalOpen && (
-        <BulkRecordPaymentModal
-            isOpen={isBulkPaymentModalOpen}
-            onClose={handleCloseBulkPaymentModal}
-            tenants={tenants}
-            payments={payments}
-            onSubmit={handleBulkRecordPayments}
-            isSubmitting={isSubmitting}
-        />
-      )}
+      {/* BulkRecordPaymentModal instance removed */}
 
       {isConfirmDeleteModalOpen && (
         <ConfirmDeleteModal
@@ -497,7 +524,6 @@ const App = (): JSX.Element => {
             isDeleting={isSubmitting}
         />
       )}
-
     </div>
   );
 };

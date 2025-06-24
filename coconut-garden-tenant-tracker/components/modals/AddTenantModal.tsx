@@ -10,9 +10,16 @@ interface AddTenantModalProps {
   onClose: () => void;
   onAddTenant: (tenant: Omit<Tenant, 'id'>) => Promise<void>; 
   isSubmitting: boolean; 
+  // Optional: title?: string; // If you want to pass dynamic title e.g. "Assign to House X"
 }
 
-const AddTenantModal: React.FC<AddTenantModalProps> = ({ isOpen, onClose, onAddTenant, isSubmitting }) => {
+const AddTenantModal: React.FC<AddTenantModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onAddTenant, 
+  isSubmitting,
+  // title = "Add New Tenant" // Default title
+ }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -61,9 +68,12 @@ const AddTenantModal: React.FC<AddTenantModalProps> = ({ isOpen, onClose, onAddT
     }
   };
 
+  const inputBaseClasses = "mt-1 block w-full px-3 py-2 bg-white border border-accent-300 rounded-md shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500 focus:outline-none disabled:bg-accent-200 disabled:text-accent-500 transition-colors duration-150 ease-in-out";
+  const modalTitle = "Assign New Tenant to House"; // Or use the prop if passed
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add New Tenant" size="lg">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} size="lg">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {submissionError && (
           <div className="p-3 mb-3 bg-error-100 border border-error-300 text-error-700 rounded-md text-sm flex items-start">
             <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
@@ -71,49 +81,49 @@ const AddTenantModal: React.FC<AddTenantModalProps> = ({ isOpen, onClose, onAddT
           </div>
         )}
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-primary-700">Full Name *</label>
-          <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-accent-400 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white disabled:bg-accent-200" disabled={isSubmitting} />
+          <label htmlFor="name" className="block text-sm font-medium text-primary-700 mb-1">Full Name *</label>
+          <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} required className={inputBaseClasses} disabled={isSubmitting} />
         </div>
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-primary-700">Email Address *</label>
-          <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-accent-400 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white disabled:bg-accent-200" disabled={isSubmitting} />
+          <label htmlFor="email" className="block text-sm font-medium text-primary-700 mb-1">Email Address *</label>
+          <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputBaseClasses} disabled={isSubmitting} />
         </div>
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-primary-700">Phone Number</label>
-          <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1 block w-full px-3 py-2 border border-accent-400 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white disabled:bg-accent-200" disabled={isSubmitting} />
+          <label htmlFor="phone" className="block text-sm font-medium text-primary-700 mb-1">Phone Number</label>
+          <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputBaseClasses} disabled={isSubmitting} />
         </div>
         <div>
-          <label htmlFor="workInfo" className="block text-sm font-medium text-primary-700">Work Information</label>
-          <textarea id="workInfo" value={workInfo} onChange={(e) => setWorkInfo(e.target.value)} rows={3} className="mt-1 block w-full px-3 py-2 border border-accent-400 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white disabled:bg-accent-200" disabled={isSubmitting} />
+          <label htmlFor="workInfo" className="block text-sm font-medium text-primary-700 mb-1">Work Information</label>
+          <textarea id="workInfo" value={workInfo} onChange={(e) => setWorkInfo(e.target.value)} rows={3} className={inputBaseClasses} disabled={isSubmitting} />
         </div>
         <div>
-          <label htmlFor="rentAmount" className="block text-sm font-medium text-primary-700">Monthly Rent Amount ({CURRENCY_SYMBOL}) *</label>
-          <input type="number" id="rentAmount" value={rentAmount} onChange={(e) => setRentAmount(parseFloat(e.target.value) || '')} required min="0" step="0.01" className="mt-1 block w-full px-3 py-2 border border-accent-400 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white disabled:bg-accent-200" disabled={isSubmitting} />
+          <label htmlFor="rentAmount" className="block text-sm font-medium text-primary-700 mb-1">Monthly Rent Amount ({CURRENCY_SYMBOL}) *</label>
+          <input type="number" id="rentAmount" value={rentAmount} onChange={(e) => setRentAmount(parseFloat(e.target.value) || '')} required min="0" step="0.01" className={inputBaseClasses} disabled={isSubmitting} />
         </div>
         <div>
-          <label htmlFor="joinDate" className="block text-sm font-medium text-primary-700">Join Date *</label>
-          <input type="date" id="joinDate" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-accent-400 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white disabled:bg-accent-200" disabled={isSubmitting} />
+          <label htmlFor="joinDate" className="block text-sm font-medium text-primary-700 mb-1">Join Date *</label>
+          <input type="date" id="joinDate" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} required className={inputBaseClasses} disabled={isSubmitting} />
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center pt-1">
           <input
             id="idProof"
             name="idProof"
             type="checkbox"
             checked={idProof}
             onChange={(e) => setIdProof(e.target.checked)}
-            className="h-4 w-4 text-primary-600 border-accent-400 rounded focus:ring-primary-500"
+            className="h-4 w-4 text-primary-600 border-accent-400 rounded focus:ring-primary-500 disabled:opacity-70"
             disabled={isSubmitting}
           />
           <label htmlFor="idProof" className="ml-2 block text-sm text-primary-800">
             ID Proof Submitted?
           </label>
         </div>
-        <div className="flex justify-end space-x-3 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-primary-800 bg-accent-200 hover:bg-accent-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" disabled={isSubmitting}>
+        <div className="flex justify-end space-x-3 pt-5">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-primary-800 bg-accent-200 hover:bg-accent-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-70" disabled={isSubmitting}>
             Cancel
           </button>
           <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50" disabled={isSubmitting}>
-            {isSubmitting ? 'Adding...' : 'Add Tenant'}
+            {isSubmitting ? 'Assigning...' : 'Assign Tenant'}
           </button>
         </div>
       </form>
