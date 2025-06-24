@@ -1,8 +1,7 @@
+
 import { CURRENCY_SYMBOL } from '../constants';
 
-// Log a warning if API_KEY is not set, as other AI features might depend on it.
-// However, generateReminderMessage will now work without it.
-// Removed API_KEY check as Gemini API is no longer used.
+// This service provides utility functions for formatting data for display.
 
 export const formatDate_dd_mmm_yyyy = (dateInput: Date | string | null | undefined): string => {
   if (!dateInput) return 'N/A';
@@ -21,10 +20,10 @@ export const formatDate_dd_mmm_yyyy = (dateInput: Date | string | null | undefin
 export const generateReminderMessage = (
   tenantName: string,
   rentAmount: number,
-  dueDate: Date // Changed from dueDateString: string
+  dueDate: Date 
 ): string => {
   const formattedDueDate = formatDate_dd_mmm_yyyy(dueDate);
-  // Always return the simple template
+  // Returns a simple template for the reminder message.
   const simpleTemplate = `Dear ${tenantName},\n\nThis is a friendly reminder that your rent payment of ${CURRENCY_SYMBOL}${rentAmount.toFixed(2)} is due on ${formattedDueDate}.\n\nPlease make your payment at your earliest convenience.\n\nThank you,\nLandlord`;
   
   return simpleTemplate;

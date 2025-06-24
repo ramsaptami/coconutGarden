@@ -92,13 +92,17 @@ const App = (): JSX.Element => {
   }, [fetchData]);
 
   const handleAddTenant = async (tenantData: Omit<Tenant, 'id'>): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null); 
     try {
       const newTenant = await api.addTenant(tenantData);
       setTenants(prev => [...prev, newTenant].sort((a, b) => a.name.localeCompare(b.name)));
       setIsAddTenantModalOpen(false);
     } catch (err) {
-      console.error("App: Error adding tenant (will be handled by modal):", err);
+      console.error("App: Error adding tenant (modal will handle display):", err);
       throw err; 
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -197,7 +201,7 @@ const App = (): JSX.Element => {
       setIsRecordPaymentModalOpen(false); 
       setPaymentRecordContext(null);
     } catch (err) {
-      console.error("App: Error confirming payment (will be handled by modal):", err);
+      console.error("App: Error confirming payment (modal will handle display):", err);
       throw err; 
     } finally {
       setIsSubmitting(false);
@@ -239,42 +243,47 @@ const App = (): JSX.Element => {
         });
     });
 
-    const results = await Promise.all(paymentPromises); 
-      
-    results.forEach(result => {
-        if (result) { 
-            newlyRecordedPayments.push(result);
-        }
-    });
-
-    if (newlyRecordedPayments.length > 0) {
-    setPayments(prevPayments => {
-        const updatedPaymentsMap = new Map(prevPayments.map(p => [`${p.tenant_id}-${p.year}-${p.month}`, p]));
-        newlyRecordedPayments.forEach(newP => {
-        updatedPaymentsMap.set(`${newP.tenant_id}-${newP.year}-${newP.month}`, newP); 
+    try {
+        const results = await Promise.all(paymentPromises); 
+          
+        results.forEach(result => {
+            if (result) { 
+                newlyRecordedPayments.push(result);
+            }
         });
-        return Array.from(updatedPaymentsMap.values());
-    });
-    }
 
-    if (someFailed) {
-        setError("One or more payments in the bulk operation failed. Please check tenant statuses or console for details.");
-    } else if (newlyRecordedPayments.length === selectedTenantIds.length && newlyRecordedPayments.length > 0) { 
-        setIsBulkPaymentModalOpen(false);
+        if (newlyRecordedPayments.length > 0) {
+        setPayments(prevPayments => {
+            const updatedPaymentsMap = new Map(prevPayments.map(p => [`${p.tenant_id}-${p.year}-${p.month}`, p]));
+            newlyRecordedPayments.forEach(newP => {
+            updatedPaymentsMap.set(`${newP.tenant_id}-${newP.year}-${newP.month}`, newP); 
+            });
+            return Array.from(updatedPaymentsMap.values());
+        });
+        }
+
+        if (someFailed) {
+            throw new Error("One or more payments in the bulk operation failed. Please check tenant statuses or review the console for more details.");
+        } else if (newlyRecordedPayments.length === selectedTenantIds.length && newlyRecordedPayments.length > 0) { 
+            setIsBulkPaymentModalOpen(false);
+        }
+    } catch (err) {
+        console.error("App: Error during bulk payment processing (modal will handle display):", err);
+        throw err; // Propagate for modal to display
+    } finally {
+        setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
   };
 
 
-  const handleSendReminder = (tenant: Tenant) => { // No longer async
+  const handleSendReminder = (tenant: Tenant) => { 
     setTenantForReminder(tenant);
     setIsReminderModalOpen(true);
     setReminderMessage(''); 
     const today = new Date();
     const dueDateForReminder = new Date(today.getFullYear(), today.getMonth(), RENT_DUE_DAY);
     try {
-        const message = generateReminderMessage(tenant.name, tenant.rent_amount, dueDateForReminder); // No await
+        const message = generateReminderMessage(tenant.name, tenant.rent_amount, dueDateForReminder);
         setReminderMessage(message);
     } catch (genError) { 
         console.error("Reminder message preparation error (unexpected):", genError);
@@ -424,7 +433,7 @@ const App = (): JSX.Element => {
           isOpen={isAddTenantModalOpen}
           onClose={() => setIsAddTenantModalOpen(false)}
           onAddTenant={handleAddTenant}
-          isSubmittingGlobal={isSubmitting} 
+          isSubmitting={isSubmitting} 
         />
       )}
 
