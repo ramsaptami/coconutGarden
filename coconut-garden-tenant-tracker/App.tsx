@@ -33,7 +33,7 @@ interface PaymentRecordContext {
   default_amount_paid: number;
 }
 
-interface HouseWithTenantAndPayment extends House {
+export interface HouseWithTenantAndPayment extends House {
   tenant: Tenant | null;
   paymentForCurrentMonth?: Payment;
   paymentStatus: PaymentStatus;
@@ -78,28 +78,24 @@ const App = (): JSX.Element => {
     setIsLoading(true);
     setError(null);
     try {
-      // In a real app, you'd fetchHouses(), but we are initializing them statically for now.
-      // We need to fetch tenants and payments to link them.
-      const [fetchedTenants, fetchedPayments, /* fetchedHousesFromDB */] = await Promise.all([
+      // Houses are initialized statically. Tenant assignments will update their `current_tenant_id`.
+      // Fetch tenants and payments to link them.
+      const [fetchedTenants, fetchedPayments] = await Promise.all([
         api.fetchTenants(),
         api.fetchPayments(),
-        // api.fetchHouses() // If houses were dynamic and stored tenant_ids
       ]);
       
       setTenants(fetchedTenants);
       setPayments(fetchedPayments);
 
-      // If houses were fetched from DB and already had tenant_ids:
-      // setHouses(fetchedHousesFromDB); 
-      // Else, if tenants have house_id (not our current model):
-      // const updatedHouses = houses.map(h => {
-      //   const tenantInHouse = fetchedTenants.find(t => t.house_id === h.id);
-      //   return { ...h, current_tenant_id: tenantInHouse ? tenantInHouse.id : null };
-      // });
-      // setHouses(updatedHouses);
-
-      // For now, we assume houses are static and tenant_id might be set by other operations
-      // or if tenants table is the source of truth for house assignment (which it isn't here)
+      // Logic to link existing tenants to houses if persistence was outside this app:
+      // This part assumes that if a tenant was previously assigned to a house,
+      // and that info isn't directly in the 'houses' state from a DB fetch,
+      // we need to infer it. However, with our current model, `updateHouse` handles this.
+      // If `houses` table stored `current_tenant_id`, we'd use that.
+      // If tenants had `house_id`, we could use that.
+      // For now, `current_tenant_id` on initial static houses is `null` and gets updated
+      // by actions like `handleAddTenantAndAssignToHouse`.
 
     } catch (err) {
       console.error("Failed to fetch data:", err);
@@ -118,7 +114,7 @@ const App = (): JSX.Element => {
     } finally {
       setIsLoading(false);
     }
-  }, []); // Removed 'houses' from dependency array as it's static initially
+  }, []); 
 
   useEffect(() => {
     fetchData();
@@ -154,7 +150,6 @@ const App = (): JSX.Element => {
   };
   
   const handleRemoveTenantFromHouse = async (houseId: string, tenantId: string) => {
-    // For now, just a confirmation. A modal could be added.
     if (!window.confirm("Are you sure you want to remove this tenant from the house? The tenant record will remain.")) return;
 
     setIsSubmitting(true);
@@ -164,10 +159,6 @@ const App = (): JSX.Element => {
         setHouses(prevHouses => prevHouses.map(h => 
             h.id === houseId ? { ...h, current_tenant_id: null } : h
         ));
-        // Optionally, update tenant.house_id to null if it existed on tenant model
-        // setTenants(prevTenants => prevTenants.map(t => 
-        //     t.id === tenantId ? { ...t, house_id: null } : t
-        // ));
     } catch (err) {
         console.error("App: Error removing tenant from house:", err);
         setError(err instanceof Error ? err.message : "Failed to remove tenant from house.");
@@ -177,12 +168,10 @@ const App = (): JSX.Element => {
   };
   
   const handleOpenModifyTenantModal = (tenant: Tenant) => {
-    // This would open a modal pre-filled with tenant's data
-    // For now, let's log and not implement the modal fully
     console.log("Modify tenant:", tenant);
     alert("Modify Tenant functionality to be implemented. See console.");
-    // setSelectedTenantForDetail(tenant);
-    // setIsModifyTenantModalOpen(true); 
+    // setSelectedTenantForDetail(tenant); // Potentially reuse or create a new state
+    // setIsModifyTenantModalOpen(true); // Need a new modal or adapt AddTenantModal
   };
 
 
@@ -199,7 +188,6 @@ const App = (): JSX.Element => {
     setIsSubmitting(true); 
     setError(null);
     try {
-      // Check if tenant is assigned to any house and unassign first
       const houseOccupiedByTenant = houses.find(h => h.current_tenant_id === tenantIdToDelete);
       if (houseOccupiedByTenant) {
         await api.updateHouse(houseOccupiedByTenant.id, { current_tenant_id: null });
@@ -257,13 +245,11 @@ const App = (): JSX.Element => {
     setIsRecordPaymentModalOpen(true);
   };
   
-  // Triggered from HouseCard for its current tenant
   const handleTriggerRecordPaymentForTenant = (tenant: Tenant) => {
     const today = new Date();
     openRecordPaymentModal(tenant.id, tenant.name, today.getMonth() + 1, today.getFullYear(), tenant.rent_amount);
   };
   
-  // Triggered from TenantDetailsModal for a specific month
   const handleTriggerRecordPaymentForPastMonth = (tenant_id: string, tenant_name: string, month: number, year: number, default_amount_paid: number) => {
     openRecordPaymentModal(tenant_id, tenant_name, month, year, default_amount_paid);
   };
@@ -283,9 +269,9 @@ const App = (): JSX.Element => {
       });
       setIsRecordPaymentModalOpen(false); 
       setPaymentRecordContext(null);
-      if (isTenantDetailModalOpen) { // Refresh details modal if open
+      if (isTenantDetailModalOpen) { 
          const tenant = tenants.find(t => t.id === paymentRecordContext.tenant_id);
-         if (tenant) setSelectedTenantForDetail(tenant); // This re-renders detail modal with new payment
+         if (tenant) setSelectedTenantForDetail(tenant); 
       }
     } catch (err) {
       console.error("App: Error confirming payment (modal will handle display):", err);
@@ -329,7 +315,7 @@ const App = (): JSX.Element => {
   };
 
   const getTenantPaymentStatus = (tenant: Tenant | null, payment?: Payment): PaymentStatus => {
-    if (!tenant) return PaymentStatus.Unpaid; // Or some other status for vacant
+    if (!tenant) return PaymentStatus.Unpaid; 
     const today = new Date();
     if (payment && payment.paid_date) return PaymentStatus.Paid;
     
@@ -337,7 +323,6 @@ const App = (): JSX.Element => {
     const currentMonth = today.getMonth() + 1;
     const currentYear = today.getFullYear();
     
-    // If tenant joined this month after the due day, they are not overdue for this month yet.
     if (join_date.getFullYear() === currentYear && 
         (join_date.getMonth() + 1) === currentMonth && 
         join_date.getDate() > RENT_DUE_DAY) {
@@ -362,7 +347,7 @@ const App = (): JSX.Element => {
     if (searchTerm && houseData.tenant) {
         return houseData.tenant.name.toLowerCase().includes(searchTerm.toLowerCase());
     }
-    if (searchTerm && !houseData.tenant) { // If searching and house is vacant, don't match
+    if (searchTerm && !houseData.tenant) { 
         return false;
     }
     return true;
@@ -447,12 +432,12 @@ const App = (): JSX.Element => {
             {filteredProcessedHouses.map(houseData => (
               <HouseCard
                 key={houseData.id}
-                house={houseData}
+                house={houseData} // This includes houseData.paymentStatus
                 tenant={houseData.tenant}
-                paymentForCurrentMonth={houseData.paymentForCurrentMonth}
+                paymentForCurrentMonth={houseData.paymentForCurrentMonth} // Still useful for displaying paid date
                 onAssignTenant={handleOpenAssignTenantModal}
                 onRemoveTenantFromHouse={handleRemoveTenantFromHouse}
-                onModifyTenant={handleOpenModifyTenantModal} // Placeholder
+                onModifyTenant={handleOpenModifyTenantModal} 
                 onRecordPayment={handleTriggerRecordPaymentForTenant}
                 onSendReminder={handleSendReminder}
                 onViewTenantDetails={openTenantDetailModal}
@@ -467,9 +452,8 @@ const App = (): JSX.Element => {
         <AddTenantModal
           isOpen={isAddTenantModalOpen}
           onClose={() => { setIsAddTenantModalOpen(false); setHouseIdToAssignTenant(null); }}
-          onAddTenant={handleAddTenantAndAssignToHouse} // Changed handler
+          onAddTenant={handleAddTenantAndAssignToHouse} 
           isSubmitting={isSubmitting} 
-          // title={`Assign Tenant to House ${houses.find(h=>h.id === houseIdToAssignTenant)?.house_number}`} // Optional: dynamic title
         />
       )}
 
@@ -507,8 +491,6 @@ const App = (): JSX.Element => {
             isSubmitting={isSubmitting}
         />
       )}
-
-      {/* BulkRecordPaymentModal instance removed */}
 
       {isConfirmDeleteModalOpen && (
         <ConfirmDeleteModal
