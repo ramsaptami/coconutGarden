@@ -1,3 +1,4 @@
+
 // import.meta.env is a Vite-specific feature.
 // If type errors occur, ensure your tsconfig.json includes "vite/client" in compilerOptions.types
 
@@ -11,7 +12,7 @@ import { Tenant, Payment, House } from '../types';
 // =================================================================================
 
 // Safely access import.meta.env
-const envFromImportMeta = (import.meta as any).env;
+const envFromImportMeta = (import.meta as any)?.env;
 
 const SUPABASE_PROJECT_URL_FROM_ENV = envFromImportMeta ? envFromImportMeta.VITE_SUPABASE_PROJECT_URL : undefined;
 const SUPABASE_ANON_KEY_FROM_ENV = envFromImportMeta ? envFromImportMeta.VITE_SUPABASE_ANON_KEY : undefined;
@@ -64,20 +65,18 @@ async function handleResponse<T>(response: Response): Promise<T> {
 // House API Functions
 // SIMULATED: In a real scenario, this would fetch from your Supabase 'houses' table.
 export async function fetchHouses(): Promise<House[]> {
-  checkSupabaseConfiguration(); // Still good to check config
-  // For now, returning a static list as the backend table might not exist yet for the user.
-  // The App.tsx will initialize with its own static list. This function is a placeholder.
+  checkSupabaseConfiguration(); 
   console.warn("API: fetchHouses is returning a placeholder. Implement backend integration.");
   // Example of what it might look like if fetching:
   // const response = await fetch(`${API_BASE_URL}/houses?select=*`, { headers: commonHeaders });
   // return handleResponse<House[]>(response);
   return Promise.resolve([
-    { id: "H3", house_number: "3", current_tenant_id: null },
-    { id: "H4", house_number: "4", current_tenant_id: null },
-    { id: "H5", house_number: "5", current_tenant_id: null },
-    { id: "H6", house_number: "6", current_tenant_id: null },
-    { id: "H8", house_number: "8", current_tenant_id: null },
-    { id: "H9", house_number: "9", current_tenant_id: null },
+    { id: "H3", house_number: "3", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: "H4", house_number: "4", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: "H5", house_number: "5", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: "H6", house_number: "6", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: "H8", house_number: "8", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+    { id: "H9", house_number: "9", current_tenant_id: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   ]);
 }
 
@@ -87,7 +86,7 @@ export async function updateHouse(houseId: string, data: Partial<Pick<House, 'cu
     method: 'PATCH',
     headers: {
       ...commonHeaders,
-      'Prefer': 'return=representation',
+      'Prefer': 'return=representation', // Ensures the updated record is returned
     },
     body: JSON.stringify(data),
   });
@@ -102,14 +101,12 @@ export async function updateHouse(houseId: string, data: Partial<Pick<House, 'cu
 // Tenant API Functions
 export async function fetchTenants(): Promise<Tenant[]> {
   checkSupabaseConfiguration();
-  const response = await fetch(`${API_BASE_URL}/tenants?select=*&order=created_at.desc`, { // Example: order by created_at
+  const response = await fetch(`${API_BASE_URL}/tenants?select=*&order=created_at.desc`, { 
     headers: commonHeaders,
   });
   return handleResponse<Tenant[]>(response);
 }
 
-// Tenant data no longer includes house_id directly for this simplified model.
-// The link is managed by House.current_tenant_id.
 export async function addTenant(tenantData: Omit<Tenant, 'id' | 'created_at' | 'updated_at'>): Promise<Tenant> {
   checkSupabaseConfiguration();
   const response = await fetch(`${API_BASE_URL}/tenants`, {
@@ -129,8 +126,6 @@ export async function addTenant(tenantData: Omit<Tenant, 'id' | 'created_at' | '
 
 export async function deleteTenant(tenantId: string): Promise<void> {
   checkSupabaseConfiguration();
-  // If this tenant is assigned to a house, the App.tsx logic should first call updateHouse
-  // to set current_tenant_id to null before calling this.
   const deleteUrl = `${API_BASE_URL}/tenants?id=eq.${tenantId}`;
   
   const response = await fetch(deleteUrl, {
@@ -164,20 +159,27 @@ export async function fetchPayments(): Promise<Payment[]> {
   return handleResponse<Payment[]>(response);
 }
 
-// Payment data can now include house_id. created_at and updated_at are handled by DB.
-export async function recordPayment(paymentData: Omit<Payment, 'id' | 'created_at' | 'updated_at'>): Promise<Payment> {
+// Modified to accept a single payment or an array of payments for bulk insert.
+export async function recordPayment(
+  paymentData: Omit<Payment, 'id' | 'created_at' | 'updated_at'> | Omit<Payment, 'id' | 'created_at' | 'updated_at'>[]
+): Promise<Payment[]> { // Always returns an array, even if one payment was sent.
   checkSupabaseConfiguration();
   const response = await fetch(`${API_BASE_URL}/payments`, {
     method: 'POST',
     headers: {
       ...commonHeaders,
-      'Prefer': 'return=representation',
+      'Prefer': 'return=representation', // Ensures Supabase returns the inserted row(s)
     },
-    body: JSON.stringify(paymentData),
+    body: JSON.stringify(paymentData), // Supabase accepts an array for bulk insert
   });
-  const newPayments = await handleResponse<Payment[]>(response);
+  
+  // Supabase returns an array of the created objects.
+  const newPayments = await handleResponse<Payment[]>(response); 
   if (newPayments && newPayments.length > 0) {
-    return newPayments[0];
+    return newPayments;
   }
-  throw new Error("Payment recording did not return the new payment data.");
+  // If paymentData was an empty array, or something went wrong but didn't throw an error.
+  if (Array.isArray(paymentData) && paymentData.length === 0) return [];
+  
+  throw new Error("Payment recording did not return the new payment data or an empty array for empty input.");
 }

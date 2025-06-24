@@ -1,16 +1,17 @@
 
+
 import React from 'react';
-import { House, Tenant, Payment, PaymentStatus } from '../types'; 
+import { Tenant, Payment, PaymentStatus, HouseWithTenantAndPayment } from '../types'; 
 import { RENT_DUE_DAY, CURRENCY_SYMBOL } from '../constants';
-import { UserCircleIcon, EnvelopeIcon, PhoneIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, EyeIcon, UserPlusIcon, UserMinusIcon, PencilIcon } from './icons'; 
+import { UserCircleIcon, EnvelopeIcon, PhoneIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, EyeIcon, UserPlusIcon, UserMinusIcon, PencilIcon, UserGroupIcon } from './icons'; 
 import { formatDate_dd_mmm_yyyy } from '../services/formatService';
-import { HouseWithTenantAndPayment } from '../App'; // Import extended type
+// HouseWithTenantAndPayment is now imported from ../types
 
 interface HouseCardProps {
-  house: HouseWithTenantAndPayment; // Use the extended type from App.tsx which includes paymentStatus
-  tenant: Tenant | null; // This is redundant if house object contains tenant, but kept for clarity if used directly
-  paymentForCurrentMonth?: Payment; // Useful for displaying payment date if paid
-  onAssignTenant: (houseId: string) => void;
+  house: HouseWithTenantAndPayment; 
+  // tenant and paymentForCurrentMonth are now part of house prop
+  onAssignTenant: (houseId: string) => void; // For new tenants
+  onAssignExistingTenant: (houseId: string, houseNumber: string) => void; // For existing tenants
   onRemoveTenantFromHouse: (houseId: string, tenantId: string) => void;
   onModifyTenant: (tenant: Tenant) => void;
   onRecordPayment: (tenant: Tenant) => void;
@@ -51,7 +52,6 @@ const getStatusDisplayProps = (
       } else {
         text = "Rent Unpaid";
       }
-      // Default colorClasses, Icon, bannerBg, bannerText for Unpaid are already set
       break;
   }
   return { text, colorClasses, Icon, bannerBg, bannerText };
@@ -59,10 +59,9 @@ const getStatusDisplayProps = (
 
 
 const HouseCard: React.FC<HouseCardProps> = ({
-  house, // house object now includes tenant, paymentForCurrentMonth, and paymentStatus
-  // tenant prop can be derived from house.tenant if preferred
-  // paymentForCurrentMonth can be derived from house.paymentForCurrentMonth
+  house, 
   onAssignTenant,
+  onAssignExistingTenant,
   onRemoveTenantFromHouse,
   onModifyTenant,
   onRecordPayment,
@@ -194,14 +193,24 @@ const HouseCard: React.FC<HouseCardProps> = ({
             </div>
           </div>
         ) : (
-          <button
-            onClick={() => onAssignTenant(house.id)}
-            disabled={isSubmitting}
-            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
-          >
-            <UserPlusIcon className="w-5 h-5" />
-            <span>Assign Tenant</span>
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => onAssignTenant(house.id)}
+              disabled={isSubmitting}
+              className="w-full bg-primary-500 hover:bg-primary-600 text-white font-bold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
+            >
+              <UserPlusIcon className="w-5 h-5" />
+              <span>Assign New Tenant</span>
+            </button>
+            <button
+              onClick={() => onAssignExistingTenant(house.id, house.house_number)}
+              disabled={isSubmitting}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center space-x-2 transition-colors disabled:opacity-50"
+            >
+              <UserGroupIcon className="w-5 h-5" />
+              <span>Assign Existing Tenant</span>
+            </button>
+          </div>
         )}
       </div>
     </div>

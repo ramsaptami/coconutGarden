@@ -1,3 +1,5 @@
+import { House } from './types'; // Forward declaration for extend
+
 export interface House {
   id: string; // e.g., "H3", "H4"
   house_number: string; // e.g., "3", "4"
@@ -38,4 +40,10 @@ export enum PaymentStatus {
   Paid = 'Paid',
   Unpaid = 'Unpaid',
   Overdue = 'Overdue'
+}
+
+export interface HouseWithTenantAndPayment extends House {
+  tenant: Tenant | null;
+  paymentForCurrentMonth?: Payment;
+  paymentStatus: PaymentStatus;
 }
