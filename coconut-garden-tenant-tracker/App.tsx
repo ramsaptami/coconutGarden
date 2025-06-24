@@ -16,7 +16,7 @@ import ConfirmDeleteModal from './components/modals/ConfirmDeleteModal';
 import { UserCircleIcon, ExclamationTriangleIcon, UsersIcon } from './components/icons';
 
 
-const initialHousesData: Omit<House, 'current_tenant_id'>[] = [
+const initialHousesData: Omit<House, 'current_tenant_id' | 'created_at' | 'updated_at'>[] = [
   { id: "H3", house_number: "3" },
   { id: "H4", house_number: "4" },
   { id: "H5", house_number: "5" },
@@ -85,7 +85,7 @@ const App = (): JSX.Element => {
         api.fetchPayments(),
       ]);
       
-      setTenants(fetchedTenants);
+      setTenants(fetchedTenants); // fetchTenants now orders by created_at desc from API
       setPayments(fetchedPayments);
 
       // Logic to link existing tenants to houses if persistence was outside this app:
@@ -125,13 +125,13 @@ const App = (): JSX.Element => {
     setIsAddTenantModalOpen(true);
   };
 
-  const handleAddTenantAndAssignToHouse = async (tenantData: Omit<Tenant, 'id'>) => {
+  const handleAddTenantAndAssignToHouse = async (tenantData: Omit<Tenant, 'id' | 'created_at' | 'updated_at'>) => {
     if (!houseIdToAssignTenant) return;
     setIsSubmitting(true);
     setError(null); 
     try {
       const newTenant = await api.addTenant(tenantData);
-      setTenants(prev => [...prev, newTenant].sort((a, b) => a.name.localeCompare(b.name)));
+      setTenants(prev => [...prev, newTenant].sort((a,b) => (b.created_at || '').localeCompare(a.created_at || ''))); // Assuming created_at for sort
       
       // Update the house to link the new tenant
       await api.updateHouse(houseIdToAssignTenant, { current_tenant_id: newTenant.id });
@@ -230,7 +230,18 @@ const App = (): JSX.Element => {
     amount_paid_from_modal: number, 
     paid_date_from_modal: string
   ): Promise<Payment> => { 
-    const paymentData: Omit<Payment, 'id'> = { tenant_id, month, year, paid_date: paid_date_from_modal, amount_paid: amount_paid_from_modal };
+    // Find the house_id for this tenant
+    const houseForTenant = houses.find(h => h.current_tenant_id === tenant_id);
+    const house_id = houseForTenant ? houseForTenant.id : null;
+
+    const paymentData: Omit<Payment, 'id' | 'created_at' | 'updated_at'> = { 
+        tenant_id, 
+        house_id, // Include house_id
+        month, 
+        year, 
+        paid_date: paid_date_from_modal, 
+        amount_paid: amount_paid_from_modal 
+    };
     try {
         const newPayment = await api.recordPayment(paymentData);
         return newPayment;
@@ -238,7 +249,7 @@ const App = (): JSX.Element => {
         console.error("Failed to record payment:", err);
         throw err;
     }
-  }, []);
+  }, [houses]); // Add houses to dependency array as it's used to find house_id
 
   const openRecordPaymentModal = (tenant_id: string, tenant_name: string, month: number, year: number, default_amount_paid: number) => {
     setPaymentRecordContext({ tenant_id, tenant_name, month, year, default_amount_paid });

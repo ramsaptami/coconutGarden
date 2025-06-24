@@ -8,7 +8,7 @@ import { CURRENCY_SYMBOL } from '../../constants';
 interface AddTenantModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddTenant: (tenant: Omit<Tenant, 'id'>) => Promise<void>; 
+  onAddTenant: (tenant: Omit<Tenant, 'id' | 'created_at' | 'updated_at'>) => Promise<void>; 
   isSubmitting: boolean; 
   // Optional: title?: string; // If you want to pass dynamic title e.g. "Assign to House X"
 }
