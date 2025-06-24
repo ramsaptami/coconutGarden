@@ -10,7 +10,6 @@ interface AddTenantModalProps {
   onClose: () => void;
   onAddTenant: (tenant: Omit<Tenant, 'id' | 'created_at' | 'updated_at'>) => Promise<void>; 
   isSubmitting: boolean; 
-  // Optional: title?: string; // If you want to pass dynamic title e.g. "Assign to House X"
 }
 
 const AddTenantModal: React.FC<AddTenantModalProps> = ({ 
@@ -18,7 +17,6 @@ const AddTenantModal: React.FC<AddTenantModalProps> = ({
   onClose, 
   onAddTenant, 
   isSubmitting,
-  // title = "Add New Tenant" // Default title
  }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -69,7 +67,7 @@ const AddTenantModal: React.FC<AddTenantModalProps> = ({
   };
 
   const inputBaseClasses = "mt-1 block w-full px-3 py-2 bg-white border border-accent-300 rounded-md shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500 focus:outline-none disabled:bg-accent-200 disabled:text-accent-500 transition-colors duration-150 ease-in-out";
-  const modalTitle = "Assign New Tenant to House"; // Or use the prop if passed
+  const modalTitle = "Assign New Tenant to House";
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} size="lg">

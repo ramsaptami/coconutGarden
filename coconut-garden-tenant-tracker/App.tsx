@@ -185,8 +185,7 @@ const App = (): JSX.Element => {
   };
   
   const handleOpenModifyTenantModal = (tenant: Tenant) => {
-    console.log("Modify tenant:", tenant);
-    alert("Modify Tenant functionality to be implemented. See console.");
+    alert("Modify Tenant functionality to be implemented. See console for tenant data if needed.");
   };
 
   const handleOpenConfirmDeleteModal = (tenantId: string, tenantName: string) => {
