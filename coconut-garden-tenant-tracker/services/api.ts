@@ -1,5 +1,6 @@
+/// <reference types="vite/client" />
 
-import { Tenant, Payment, House } from '../types'; 
+import { Tenant, Payment, House } from '../types';
 
 // =================================================================================
 // Configuration is now sourced from Environment Variables.
@@ -8,13 +9,14 @@ import { Tenant, Payment, House } from '../types';
 // VITE_SUPABASE_ANON_KEY
 // =================================================================================
 
-const SUPABASE_PROJECT_URL_FROM_ENV = process.env.VITE_SUPABASE_PROJECT_URL;
-const SUPABASE_ANON_KEY_FROM_ENV = process.env.VITE_SUPABASE_ANON_KEY;
+// Use import.meta.env for Vite projects
+const SUPABASE_PROJECT_URL_FROM_ENV = import.meta.env.VITE_SUPABASE_PROJECT_URL;
+const SUPABASE_ANON_KEY_FROM_ENV = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const API_BASE_URL = `${SUPABASE_PROJECT_URL_FROM_ENV}/rest/v1`; 
+const API_BASE_URL = `${SUPABASE_PROJECT_URL_FROM_ENV}/rest/v1`;
 
 const commonHeaders = {
-  'apikey': SUPABASE_ANON_KEY_FROM_ENV!, 
+  'apikey': SUPABASE_ANON_KEY_FROM_ENV!,
   'Authorization': `Bearer ${SUPABASE_ANON_KEY_FROM_ENV!}`,
   'Content-Type': 'application/json',
 };
@@ -42,15 +44,15 @@ async function handleResponse<T>(response: Response): Promise<T> {
     }
     throw new Error(errorMessage);
   }
-  if (response.status === 204) { 
-    return null as T; 
+  if (response.status === 204) {
+    return null as T;
   }
   const contentType = response.headers.get("content-type");
   if (contentType && contentType.indexOf("application/json") !== -1) {
     const data = await response.json();
     return data as T;
   }
-  return null as T; 
+  return null as T;
 }
 
 // House API Functions
@@ -108,9 +110,9 @@ export async function addTenant(tenantData: Omit<Tenant, 'id'>): Promise<Tenant>
     method: 'POST',
     headers: {
       ...commonHeaders,
-      'Prefer': 'return=representation', 
+      'Prefer': 'return=representation',
     },
-    body: JSON.stringify(tenantData), 
+    body: JSON.stringify(tenantData),
   });
   const newTenants = await handleResponse<Tenant[]>(response);
   if (newTenants && newTenants.length > 0) {
@@ -124,16 +126,16 @@ export async function deleteTenant(tenantId: string): Promise<void> {
   // If this tenant is assigned to a house, the App.tsx logic should first call updateHouse
   // to set current_tenant_id to null before calling this.
   const deleteUrl = `${API_BASE_URL}/tenants?id=eq.${tenantId}`;
-  
+
   const response = await fetch(deleteUrl, {
     method: 'DELETE',
     headers: {
-        ...commonHeaders,
-        'Prefer': 'return=minimal', 
+      ...commonHeaders,
+      'Prefer': 'return=minimal',
     },
   });
 
-  if (!response.ok && response.status !== 204) { 
+  if (!response.ok && response.status !== 204) {
     let errorMessage = `API Error: ${response.status} ${response.statusText}`;
     let errorDetails = null;
     try {
